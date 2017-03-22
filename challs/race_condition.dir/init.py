@@ -1,6 +1,5 @@
 import os
 import sqlite3
-import bcrypt
 
 
 def init(path, randomize, file_challenge_name=None):
@@ -23,10 +22,9 @@ def init(path, randomize, file_challenge_name=None):
 		login TEXT NOT NULL UNIQUE,
 		password TEXT NOT NULL)""")
 
-    cur.execute("""CREATE TABLE forbidden_ids (
-		user_id INTEGER NOT NULL UNIQUE)""")
+    cur.execute("""CREATE TABLE forbidden_ids (user_id INTEGER NOT NULL UNIQUE)""")
     conn.commit()
-    hashed_randomize = bcrypt.hashpw(randomize.encode("utf-8"), bcrypt.gensalt(8)).decode('utf-8')
+    hashed_randomize = "$2a$12$mOPugE7rXVJZfWksHDF06ukZg.Zp.DGLA7B1JpSPYfw94dDjHMEDS"
     cur.execute("INSERT INTO users(login, password) VALUES(?, ?)", [randomize, hashed_randomize])
     conn.commit()
     conn.close()
