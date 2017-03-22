@@ -11,7 +11,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="user in users | orderBy: '-points'" ng-click="go('/user/' + user.id)">
+                <tr ng-repeat="user in users | orderBy: '-points'" ng-click="go('/user/' + user.id)" style="cursor: pointer;">
                     <td>{{$index + 1}}</td>
                     <td>{{user.points}}</td>
                     <td>{{user.exploited}}</td>
