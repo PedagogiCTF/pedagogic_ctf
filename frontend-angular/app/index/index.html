@@ -1,8 +1,9 @@
-<div class="row" style="margin-top: -20px;margin-right: 0">
+<div class="row" style="margin-top: -20px;margin-right: 0" ng-controller="IndexCtrl" ng-init="init()">
     <nav class="col-xs-2 menu">
         <ul>
             <li ng-repeat="challenge in challenges" class="withripple" ng-click="showChallenge(challenge.challenge_id, $index)"
                 ng-class="{active: isChallengeSelected(challenge)}">
+                <span ng-show="isChallengeValidated(challenge)"><i class="material-icons">done</i></span>
                 {{ challenge.name }}
             </li>
         </ul>
@@ -44,7 +45,7 @@
                                         placeholder="{{ parameter.placeholder}}">
                                 </div>
                             </div>
-                            <button class="btn btn-raised btn-info" ng-click="execute(challenge.challenge_id, '/execute')">
+                            <button class="btn btn-raised btn-info" ng-click="execute(challenge.challenge_id)">
 				                <span ng-show="executeButtonText == 'Processing'">
 					            <i class="material-icons spinning">autorenew</i>
 				                </span>
@@ -59,7 +60,7 @@
                                 <input class="form-control" id="secret" ng-model="requestValidate[challenge.challenge_id].secret"
                                     placeholder="The challenge's secret is ?">
                             </div>
-                            <input class="btn btn-raised btn-info" type="submit" ng-click="execute(challenge.challenge_id, '/validate')"
+                            <input class="btn btn-raised btn-info" type="submit" ng-click="validate(challenge.challenge_id)"
                                 value="Validate">
                             <input class="btn btn-raised" type="reset" value="Reset">
                         </form>
@@ -80,7 +81,7 @@
                                 }
 				            }" style="height:500px;">
                         </div>
-                        <button class="btn btn-raised btn-info" ng-click="execute(challenge.challenge_id, '/correct', language.extension)">
+                        <button class="btn btn-raised btn-info" ng-click="correct(challenge.challenge_id, language.extension)">
 				            <span ng-show="correctButtonText == 'Checking'">
 					        <i class="material-icons spinning">autorenew</i>
 				            </span>

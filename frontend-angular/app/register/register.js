@@ -12,6 +12,11 @@ angular.module('myApp.register', ['ngRoute', 'ngCookies'])
 .controller('RegisterCtrl', ['$location', '$scope', '$http', '$cookies', function($location, $scope, $http, $cookies) {
 
     /* ------ BEGIN INIT ------ */
+    $scope.passwordPlaceholder = "********";
+    if ($location.protocol !== "https:") {
+        $scope.passwordPlaceholder = "******** (carefull this is currently an http app)";
+    }
+
     $scope.request = {};
     $scope.user = $cookies.getObject('user') || {};
     if (!$scope.user.email) {

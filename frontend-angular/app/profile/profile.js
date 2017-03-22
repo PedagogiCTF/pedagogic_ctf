@@ -15,8 +15,6 @@ angular.module('myApp.profile', ['ngRoute', 'ngCookies'])
 
 .controller('MyProfileCtrl', ['$location', '$scope', '$http', '$cookies', function($location, $scope, $http, $cookies) {
 
-    /* ------ BEGIN INIT ------ */
-
     $scope.request = {};
     $scope.nbChallengesAvailable = 0;
     $scope.totalScoreChallenges = 0;
@@ -72,10 +70,7 @@ angular.module('myApp.profile', ['ngRoute', 'ngCookies'])
             });
         });
     }
-    /* ------ END INIT ------ */
 
-
-    /* ------ BEGIN USER-SERVER INTERACTION ------ */
     $scope.changePassword = function() {
         if ($scope.request.password !== $scope.request.passwordConfirm) {
             $.snackbar({
@@ -116,7 +111,6 @@ angular.module('myApp.profile', ['ngRoute', 'ngCookies'])
             });
         }
     };
-    /* ------ END USER-SERVER INTERACTION ------ */
 }])
 
 .controller('UserProfileCtrl', ['$routeParams', '$location', '$scope', '$http', '$cookies', function($routeParams, $location, $scope, $http, $cookies) {

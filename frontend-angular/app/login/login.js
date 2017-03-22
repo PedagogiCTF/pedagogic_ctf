@@ -24,6 +24,11 @@ angular.module('myApp.login', ['ngRoute', 'ngCookies'])
         });
         $location.path('/user/me');
     }
+    
+    $scope.passwordPlaceholder = "********";
+    if ($location.protocol !== "https:") {
+        $scope.passwordPlaceholder = "******** (carefull this is currently an http app)";
+    }
     /* ------ END INIT ------ */
 
 
