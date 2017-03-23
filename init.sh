@@ -22,12 +22,12 @@ chmod o+rx /srv/ctf_go/
 chmod o+rx /srv/ctf_go/challs/
 chown :www-data /srv/ctf_go/frontend-angular/ -R
 
-# Build app that check if user has well corrected the script
-gcc /srv/ctf_go/check_challenge_corrected.c -o /srv/ctf_go/check_challenge_corrected
-chown root:ctf_interne /srv/ctf_go/check_challenge_corrected
-chmod 4750 /srv/ctf_go/check_challenge_corrected
-chown root:root /srv/ctf_go/check_challenge_corrected.py
-chmod 500 /srv/ctf_go/check_challenge_corrected.py
+# Build app that wrap and execute user's code
+gcc /srv/ctf_go/sandbox.c -o /srv/ctf_go/sandbox
+chown root:ctf_interne /srv/ctf_go/sandbox
+chmod 4750 /srv/ctf_go/sandbox
+chown root:root /srv/ctf_go/sandbox.py
+chmod 500 /srv/ctf_go/sandbox.py
 
 # Init challenges
 for chall_name in `ls challs|grep dir|sed "s/.dir$//"`
@@ -55,6 +55,8 @@ chown root:data_exposure /srv/ctf_go/challs/data_exposure.dir/key
 
 
 chown ctf_interne /srv/ctf_go/challenges.json
+
+rm -Rf /pedagogic_ctf
 
 # configure nginx
 cp /srv/ctf_go/nginx.conf /etc/nginx/sites-available/pedagogictf

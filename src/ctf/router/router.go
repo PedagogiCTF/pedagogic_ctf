@@ -52,6 +52,12 @@ var routes = model.Routes{
 		handlers.ChallengeCorrect,
 	},
 	model.Route{
+		"ChallengeInterpret",
+		"POST",
+		"/v1.0/challenge/{challengeName}/interpret",
+		handlers.ChallengeInterpret,
+	},
+	model.Route{
 		"UserAuthenticate",
 		"POST",
 		"/v1.0/user/login",

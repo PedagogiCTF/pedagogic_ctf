@@ -5,12 +5,14 @@ take in param the name of challenge to add in challs/
 add the user + chmod/chown the chall files
 """
 
-import sys, os
-import re
-import subprocess
-import json
 import importlib.machinery
-import random, string
+import json
+import os
+import random
+import re
+import string
+import subprocess
+import sys
 
 CHALLS_DIR = "challs"
 WEB_USER = "ctf_interne"

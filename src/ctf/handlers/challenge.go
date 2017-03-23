@@ -3,6 +3,7 @@ package handlers
 import (
 	"ctf/model"
 	"ctf/utils"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -192,7 +193,7 @@ func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :) You earned " + strconv.Itoa(int(challenge.Points)) + "pts for that.\n" + challenge.ResolvedConclusion})
+		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :)\n" + challenge.ResolvedConclusion})
 	}
 }
 
@@ -271,41 +272,9 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Security, match available challenge extensions (avoid .sh injection for example)
-	regexLanguageExtension := regexp.MustCompile(`^\.[a-z0-9]{2,5}$`)
-	if !regexLanguageExtension.MatchString(correctedScript.LanguageExtension) {
-		w.WriteHeader(http.StatusBadRequest)
-		utils.SendResponseJSON(w, utils.BadRequestMessage)
-		return
-	}
-
-	// mkdir random folder + create script file based on user input
-	correctedScriptPath := "/srv/writable/" + challengeName + "_" + utils.RandString(30) + "/"
-	if err = os.Mkdir(correctedScriptPath, 0750); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		utils.SendResponseJSON(w, utils.InternalErrorMessage)
-		log.Println(err)
-		return
-	}
-	scriptFile, err := os.Create(correctedScriptPath + challengeName + correctedScript.LanguageExtension)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		utils.SendResponseJSON(w, utils.InternalErrorMessage)
-		log.Println(err)
-		return
-	}
-	_, err = scriptFile.WriteString(correctedScript.ContentScript)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		utils.SendResponseJSON(w, utils.InternalErrorMessage)
-		log.Println(err)
-		return
-	}
-	scriptFile.Sync()
-	scriptFile.Close()
-
-	cmd := utils.BasePath + "check_challenge_corrected"
-	out, err := customCommand(cmd, challengeFolderPath, correctedScriptPath, challengeName, correctedScript.LanguageExtension).CombinedOutput()
+	encodedContent := base64.StdEncoding.EncodeToString([]byte(correctedScript.ContentScript))
+	cmd := utils.BasePath + "sandbox"
+	out, err := customCommand(cmd, challengeFolderPath, encodedContent, challengeName, correctedScript.LanguageExtension).CombinedOutput()
 	if err != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
 		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your script is not perfect yet.. Here is your error : \"%v : %s\"", err, string(out[:]))
@@ -358,8 +327,43 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		w.WriteHeader(http.StatusOK)
-		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :) You earned " + strconv.Itoa(int(challenge.Points)) + "pts for that.\n" + challenge.ResolvedConclusion})
+		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :)\n" + challenge.ResolvedConclusion})
 	}
+}
+
+func ChallengeInterpret(w http.ResponseWriter, r *http.Request) {
+
+	challengeName, challengeFolderPath, _, err := getChallengeInfos(w, r)
+	if err != nil {
+		return
+	}
+
+	var correctedScript model.CorrectedScript
+	var correctedScriptRaw []byte
+	err = utils.LoadJSONFromRequest(w, r, &correctedScriptRaw)
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(correctedScriptRaw, &correctedScript)
+	if err != nil {
+		utils.SendResponseJSON(w, utils.BadRequestMessage)
+		log.Println(err)
+		return
+	}
+
+	encodedContent := base64.StdEncoding.EncodeToString([]byte(correctedScript.ContentScript))
+	cmd := utils.BasePath + "sandbox"
+	out, err := customCommand(
+		cmd,
+		challengeFolderPath,
+		encodedContent,
+		challengeName,
+		correctedScript.LanguageExtension,
+		"interpret",
+	).CombinedOutput()
+
+	w.WriteHeader(http.StatusOK)
+	utils.SendResponseJSON(w, utils.Message{string(out[:])})
 }
 
 func GetChallenges() (challenges model.Challenges, err error) {

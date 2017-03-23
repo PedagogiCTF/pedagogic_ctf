@@ -23,17 +23,21 @@ angular.module('myApp')
         });
 
         $scope.executeButtonText = "Execute";
-        $scope.correctButtonText = "Check if your code is better than mine!";
+        $scope.correctButtonText = "Try to exploit my patched code";
+        $scope.interpretButtonText = "Run";
 
         $scope.isShownHash = {};
         $scope.requestExecute = {};
         $scope.requestValidate = {};
         $scope.challengeResults = {};
         $scope.requestCorrect = {};
+        $scope.requestInterpret = {};
         $scope.validatedChallenges = [];
         $scope.challenge = {};
         $scope.language = {};
         $scope.user = $cookies.getObject('user') || {};
+        $scope.challengeMode = "execute";
+        $scope.interpretOutput = "";
 
         $scope.getAllChallenges();
         $scope.getUserValidatedChallenges();
@@ -58,6 +62,20 @@ angular.module('myApp')
                     var language = challenge.languages[i];
                     $scope.requestCorrect[challengeId][language.extension] = {
                         "content_script": language.file_content
+                    };
+                    var interpret_shibang = "";
+                    switch (language.extension) {
+                        case ".py":
+                            interpret_shibang = "#!/usr/bin/python3\n\n";
+                            break;
+                        case ".pl":
+                            interpret_shibang = "#!/usr/bin/env perl\n\n";
+                            break;
+                        default:
+                            interpret_shibang = "";
+                    };
+                    $scope.requestInterpret[challengeId][language.extension] = {
+                        "content_script": interpret_shibang
                     };
                     $scope.aceLoaded[challengeId][language.extension] = (function(challId, ext) {
                         return function(_editor) {
@@ -90,10 +108,10 @@ angular.module('myApp')
             id: challengeId
         }, $scope.requestExecute[challengeId]).$promise.then(
             function(response) {
-                var challOutput = response;
+                var output = response;
                 $anchorScroll("output_" + challengeId);
                 $("#output_" + challengeId, function() {
-                    $("#output_" + challengeId).html(challOutput.message); // To generate XSS !!
+                    $("#output_" + challengeId).html(output.message); // To generate XSS !!
                 })
                 $("#output_" + challengeId).delay(750).qcss({
                     backgroundColor: '#FFFF70'
@@ -159,6 +177,32 @@ angular.module('myApp')
         });
     };
 
+    $scope.interpret = function(challengeId, extension) {
+
+        $http.defaults.headers.common['X-CTF-AUTH'] = $scope.user.token;
+        var title = "";
+        var message = "";
+        var previousButtonText = $scope.interpretButtonText;
+        $scope.interpretButtonText = "Processing";
+
+        $scope.requestInterpret[challengeId][extension].language_extension = extension;
+        Challenges.interpret({
+            id: challengeId
+        }, $scope.requestInterpret[challengeId][extension]).$promise.then(
+            function(response) {
+                var output = response;
+                $scope.interpretOutput = output.message;
+                $scope.interpretButtonText = previousButtonText;
+            },
+            function(err) {
+                title = "Execution error";
+                message = err.data.message;
+                $scope.executeButtonText = previousButtonText;
+                showModal(title, message);
+            }
+        );
+    };
+
     $scope.reset = function(challengeId) {
         $scope.requestExecute = {};
         $scope.requestValidate = {};
@@ -185,12 +229,17 @@ angular.module('myApp')
         $scope.language = language;
     };
 
+    $scope.selectChallengeMode = function(mode) {
+        $scope.challengeMode = mode;
+    };
+
     $scope.getAllChallenges = function() {
         Challenges.getAll().$promise.then(
             function(response) {
                 $scope.challenges = response;
                 for (var i = 0; i < $scope.challenges.length; ++i) {
                     $scope.requestCorrect[$scope.challenges[i].challenge_id] = {};
+                    $scope.requestInterpret[$scope.challenges[i].challenge_id] = {};
                 }
                 $scope.showChallenge($scope.challenges[0].challenge_id, 0);
                 $(".search-details-form").hide();

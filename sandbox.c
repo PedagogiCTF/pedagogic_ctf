@@ -5,8 +5,8 @@
 #include <string.h>
 
 int main (int argc, char *argv[]) {
-    const char* COMMAND_PATH = "/srv/ctf_go/check_challenge_corrected.py";
-    char* COMMAND_NAME = "check_challenge_corrected.py";
+    const char* COMMAND_PATH = "/srv/ctf_go/sandbox.py";
+    char* COMMAND_NAME = "sandbox.py";
     // have to do this to keep the suid
     setregid(getegid(), getegid());
     setreuid(geteuid(), geteuid());
