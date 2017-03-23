@@ -63,19 +63,8 @@ angular.module('myApp')
                     $scope.requestCorrect[challengeId][language.extension] = {
                         "content_script": language.file_content
                     };
-                    var interpret_shibang = "";
-                    switch (language.extension) {
-                        case ".py":
-                            interpret_shibang = "#!/usr/bin/python3\n\n";
-                            break;
-                        case ".pl":
-                            interpret_shibang = "#!/usr/bin/env perl\n\n";
-                            break;
-                        default:
-                            interpret_shibang = "";
-                    };
                     $scope.requestInterpret[challengeId][language.extension] = {
-                        "content_script": interpret_shibang
+                        "content_script": getInterpreterShibang(language.extension)
                     };
                     $scope.aceLoaded[challengeId][language.extension] = (function(challId, ext) {
                         return function(_editor) {
@@ -274,6 +263,24 @@ angular.module('myApp')
             },
             function(err) {}
         );
+    };
+
+    function getInterpreterShibang(extension) {
+        var shibang = "";
+        switch (extension) {
+            case ".py":
+                shibang = "#!/usr/bin/python3\n\n";
+                break;
+            case ".pl":
+                shibang = "#!/usr/bin/env perl\n\n";
+                break;
+            case ".go":
+                shibang = "package main\n\n";
+                break;
+            default:
+                shibang = "";
+        };
+        return shibang
     };
 
     function showModal(title, message) {
