@@ -8,8 +8,8 @@ int main (int argc, char *argv[]) {
     const char* COMMAND_PATH = "/srv/ctf_go/sandbox.py";
     char* COMMAND_NAME = "sandbox.py";
     // have to do this to keep the suid
-    setregid(getegid(), getegid());
-    setreuid(geteuid(), geteuid());
+    //setregid(getegid(), getegid());
+    //setreuid(geteuid(), geteuid());
     int arrayLength = argc+1;
     char** arguments = (char**) malloc( sizeof(char*) * (arrayLength));
     char* null = (char*)0;

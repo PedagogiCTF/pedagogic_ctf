@@ -17,7 +17,7 @@ def check(binary, randomize):
 
     current_path = os.path.dirname(os.path.realpath(__file__))
     shutil.copyfile('/srv/ctf_go/challs/data_exposure.dir/key', '{}/key'.format(current_path))
-    os.system('chown root:data_exposure ' + '{}/key'.format(current_path))
+    os.system('chmod 444 {}/key'.format(current_path))
 
     checks = [
         {

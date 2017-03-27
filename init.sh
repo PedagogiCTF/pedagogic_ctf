@@ -6,8 +6,12 @@ useradd ctf_interne
 mkdir /home/ctf_interne && chown ctf_interne:ctf_interne /home/ctf_interne -R
 rm -rf /srv/ctf_go && mkdir /srv/ctf_go
 
+# Install Go
+wget --quiet "https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz"
+tar -xf go1.8.linux-amd64.tar.gz
+mv go /usr/local
 export GOPATH=`pwd`
-export PATH=$PATH:${GOROOT}/bin:${GOPATH}/bin
+export PATH=$PATH:/usr/local/go/bin:${GOPATH}/bin
 echo "Fetching golang requirements.."
 go get ctf/main
 
@@ -41,7 +45,7 @@ done
 # Selenium based challs specific
 # TODO: add to init challenges
 cd /usr/local/bin
-wget "https://github.com/mozilla/geckodriver/releases/download/v0.15.0/geckodriver-v0.15.0-linux64.tar.gz"
+wget --quiet "https://github.com/mozilla/geckodriver/releases/download/v0.15.0/geckodriver-v0.15.0-linux64.tar.gz"
 tar xvzf geckodriver-v0.15.0-linux64.tar.gz
 chmod +x geckodriver
 

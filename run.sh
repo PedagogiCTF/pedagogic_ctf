@@ -9,7 +9,7 @@ fi
 
 cd /srv/ctf_go
 export GOPATH=`pwd`
-export PATH=$PATH:${GOROOT}/bin:${GOPATH}/bin
+export PATH=$PATH:/usr/local/go/bin:${GOPATH}/bin
 echo "Building.."
 go build ctf/main
 chmod o-rwx ./main

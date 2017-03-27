@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"ctf/model"
 	"ctf/utils"
 	"encoding/base64"
@@ -13,7 +14,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -31,18 +31,25 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func customCommand(name string, dir string, arg ...string) *exec.Cmd {
-	cmd := &exec.Cmd{
-		Path: name,
-		Args: append([]string{name}, arg...),
-		Dir:  dir,
+func customCommand(name string, dir string, arg ...string) (out string, err error) {
+	// https://medium.com/@vCabbage/go-timeout-commands-with-os-exec-commandcontext-ba0c861ed738#.grao7dugq
+
+	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
+	defer cancel() // The cancel should be deferred so resources are cleaned up
+
+	cmd := exec.CommandContext(ctx, name)
+	cmd.Args = append([]string{name}, arg...)
+	cmd.Dir = dir
+
+	var stdErrOut []byte
+	stdErrOut, err = cmd.CombinedOutput()
+
+	if ctx.Err() == context.DeadlineExceeded {
+		out = "Operation timed out\n"
+	} else {
+		out = string(stdErrOut)
 	}
-	if filepath.Base(name) == name {
-		if lp, err := exec.LookPath(name); err == nil {
-			cmd.Path = lp
-		}
-	}
-	return cmd
+	return out, err
 }
 
 func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName string, challengeFolderPath string, challenge model.Challenge, err error) {
@@ -240,10 +247,10 @@ func ChallengeExecute(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cmd := challengeFolderPath + "wrapper"
-	out, err := customCommand(cmd, challengeFolderPath, args...).CombinedOutput()
+	out, err := customCommand(cmd, challengeFolderPath, args...)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your request failed.. You might be on the good track. Here is your error : \"%v : %s\"", err, string(out[:]))
+		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your request failed.. You might be on the good track. Here is your error : \"%v : %s\"", err, out)
 		utils.SendResponseJSON(w, utils.Message{encouragingMessage})
 		log.Printf("%v : %s\n", err, string(out[:]))
 		return
@@ -274,10 +281,10 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 
 	encodedContent := base64.StdEncoding.EncodeToString([]byte(correctedScript.ContentScript))
 	cmd := utils.BasePath + "sandbox"
-	out, err := customCommand(cmd, challengeFolderPath, encodedContent, challengeName, correctedScript.LanguageExtension).CombinedOutput()
+	out, err := customCommand(cmd, challengeFolderPath, encodedContent, challengeName, correctedScript.LanguageExtension)
 	if err != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
-		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your script is not perfect yet.. Here is your error : \"%v : %s\"", err, string(out[:]))
+		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your script is not perfect yet.. Here is your error : \"%v : %s\"", err, out)
 		utils.SendResponseJSON(w, utils.Message{encouragingMessage})
 		log.Printf("%v : %s\n", err, string(out[:]))
 		return
@@ -360,10 +367,10 @@ func ChallengeInterpret(w http.ResponseWriter, r *http.Request) {
 		challengeName,
 		correctedScript.LanguageExtension,
 		"interpret",
-	).CombinedOutput()
+	)
 
 	w.WriteHeader(http.StatusOK)
-	utils.SendResponseJSON(w, utils.Message{string(out[:])})
+	utils.SendResponseJSON(w, utils.Message{out})
 }
 
 func GetChallenges() (challenges model.Challenges, err error) {

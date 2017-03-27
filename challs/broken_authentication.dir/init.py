@@ -13,17 +13,22 @@ def init(path, randomize, file_challenge_name=None):
 def init_db(path, file_challenge_name):
 
     db = os.path.join(os.path.sep, "tmp", "broken_authentication.db")
+    context_db = db
 
     if file_challenge_name:
-        db = os.path.join(path, "broken_authentication.db")
+        context_db = os.path.join(path, "broken_authentication.db")
         file_challenge_path = os.path.join(path, file_challenge_name)
         with open(file_challenge_path, "r") as chall:
             file_chall_content = chall.read()
-            new_file_chall_content = file_chall_content.replace("/tmp/broken_authentication.db", db)
+            new_file_chall_content = file_chall_content.replace(db, context_db)
         with open(file_challenge_path, "w") as chall:
             chall.write(new_file_chall_content)
 
-    conn = sqlite3.connect(db)
+    need_chmod = False
+    if db == context_db:
+        need_chmod = True
+
+    conn = sqlite3.connect(context_db)
     cur = conn.cursor()
     cur.execute("DROP TABLE IF EXISTS users")
     conn.commit()
@@ -47,8 +52,9 @@ def init_db(path, file_challenge_name):
     conn.commit()
     conn.close()
 
-    os.system('chown broken_authentication:broken_authentication ' + db)
-    os.system('chmod 640 ' + db)
+    if need_chmod:
+        os.system('chown broken_authentication:broken_authentication ' + context_db)
+        os.system('chmod 640 ' + context_db)
 
 
 def init_secret(path, randomize):

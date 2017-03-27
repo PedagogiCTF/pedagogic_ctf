@@ -5,7 +5,6 @@ RUN apt-get update -y && apt-get install --fix-missing -y \
     nginx \
     git \
     nodejs \
-    golang \
     libauthen-passphrase-perl \
     libmojolicious-perl \
     libdigest-sha-perl \
@@ -33,7 +32,7 @@ COPY frontend-angular /pedagogic_ctf/frontend-angular
 RUN cd /pedagogic_ctf/frontend-angular && bower install --allow-root
 COPY requirements.txt /pedagogic_ctf/
 RUN pip3 install -r /pedagogic_ctf/requirements.txt
-COPY sandbox.c sandbox.py clean.py load_challenges.py nginx.conf /pedagogic_ctf/
+COPY sandbox.c sandbox.py load_challenges.py nginx.conf /pedagogic_ctf/
 COPY src /pedagogic_ctf/src
 COPY challs /pedagogic_ctf/challs
 COPY init.sh run.sh selenium.sh /pedagogic_ctf/
