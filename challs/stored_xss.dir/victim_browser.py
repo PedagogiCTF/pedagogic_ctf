@@ -1,59 +1,77 @@
 #!/usr/bin/python3
 
+import sqlite3
 import sys
 
+from base64 import b64encode
 from time import sleep
+from urllib.parse import quote
 
-from bs4 import BeautifulSoup
+import requests
+
 from redis import Redis
 from rq import Queue
 
-selenium_queue = Queue(
-    connection=Redis(),
-    name='selenium'
-)
-
+SELENIUM_HOST = "selenium.pedagogic_ctf"
 HOST = 'my-site.com'
 PORT = 8888
 DB_REQUEST_PATH = '/internal/debug/get-comments'
 
+selenium_queue = Queue(
+    connection=Redis(
+        host=SELENIUM_HOST,
+        port=6379
+    ),
+    name='selenium'
+)
 
-def victim_browse(rand, secret):
+
+def victim_browse(user_email, secret):
     """
         Fake a browser navigation
     """
+    con = sqlite3.connect('/tmp/stored_xss.db', isolation_level=None)
+    dump = b64encode(bytes(
+        '\n'.join(line for line in con.iterdump() if '"sqlite_sequence"' not in line),
+        "utf-8"
+    )).decode()
+    con.close()
+
     job = selenium_queue.enqueue(
         'worker.get_screenshot',
         host=HOST,
         port=PORT,
         path=DB_REQUEST_PATH,
-        client=ctf_user_email,
+        client=user_email,
         secret=secret,
-        db_path=None
+        db_dump=quote(dump)
     )
 
-    while job.status == 'queued':
-        sleep(0.5)
+    while job.status != 'finished':
+        sleep(0.2)
 
     return job.result
 
 
-if __name__ == '__main__':
+def main():
 
     ctf_user_email = sys.argv[1]
 
-    with open('secret') as f:
-        secret = f.read().strip()
+    with open('secret') as _file:
+        secret = _file.read().strip()
 
     victim_response = victim_browse(ctf_user_email, secret)
-    victim_soup = BeautifulSoup(victim_response, "html.parser")
 
-    with open('/tmp/api.log', 'r') as log:
-        srv_logs = log.readlines()
-
-    srv_logs = '<br>'.join([l.strip() for l in srv_logs if ctf_user_email in l or '* Running' in l])
-    srv_logs = srv_logs.replace('http://{}'.format(HOST), 'http://evil.com')
+    logs = requests.get('http://{}:{}/internal/debug/get-logs?client={}'.format(
+        SELENIUM_HOST,
+        PORT,
+        ctf_user_email
+    )).text
 
     response = "<h2>Victim browser's screenshot</h2><br>{}<h2>Server logs</h2><pre>{}</pre>"
-    response = response.format(victim_soup.prettify(), srv_logs)
+    response = response.format(victim_response, logs)
     print(response)
+
+if __name__ == '__main__':
+
+    main()

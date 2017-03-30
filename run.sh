@@ -1,18 +1,28 @@
 #!/bin/bash
 
-user=`whoami`
-if [ ${user} != 'ctf_interne' ] ; then
-    echo "please launch using : "
-    echo "    sudo -u ctf_interne ./run.sh"
-    exit
+spinner()
+{
+    local pid=$1
+    local delay=0.5
+    local spinstr='|/-\'
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf " [%c] " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\b\b\b\b\b\b"
+    done
+    printf "    \b\b\b\b"
+}
+
+if sudo docker ps | grep selenium | grep Up >/dev/null ; then
+    echo " [*] Stopping running Selenium Docker instance ..."
+    sudo docker stop selenium >/dev/null &
+    spinner $!
+    sudo docker rm selenium >/dev/null
 fi
 
-cd /srv/ctf_go
-export GOPATH=`pwd`
-export PATH=$PATH:/usr/local/go/bin:${GOPATH}/bin
-echo "Building.."
-go build ctf/main
-chmod o-rwx ./main
-echo "Built"
-echo "Launching app!"
+echo " [*] Starting Selenium Docker"
+sudo docker run --name=selenium --network=pedagogic_ctf -p 6379:6379 -p 8888:8888 -d -t selenium >/dev/null
+echo " [*] Running API ..."
 ./main

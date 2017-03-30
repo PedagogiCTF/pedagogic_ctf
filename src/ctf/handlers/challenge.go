@@ -4,7 +4,6 @@ import (
 	"context"
 	"ctf/model"
 	"ctf/utils"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -31,14 +30,30 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func customCommand(name string, dir string, arg ...string) (out string, err error) {
+func customCommand(filename, extension, dir string, args ...string) (out string, err error) {
 	// https://medium.com/@vCabbage/go-timeout-commands-with-os-exec-commandcontext-ba0c861ed738#.grao7dugq
 
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel() // The cancel should be deferred so resources are cleaned up
 
-	cmd := exec.CommandContext(ctx, name)
-	cmd.Args = append([]string{name}, arg...)
+	file := filename + extension
+	args = append([]string{file}, args...)
+
+	var interpreter string
+	switch extension {
+	case ".py":
+		interpreter = "python3"
+	case ".pl":
+		interpreter = "perl"
+	case ".go":
+		interpreter = "go"
+		args = append([]string{"run"}, args...)
+	default:
+		return "", errors.New("Invalid extension")
+	}
+
+	cmd := exec.CommandContext(ctx, interpreter)
+	cmd.Args = append([]string{interpreter}, args...)
 	cmd.Dir = dir
 
 	var stdErrOut []byte
@@ -52,7 +67,8 @@ func customCommand(name string, dir string, arg ...string) (out string, err erro
 	return out, err
 }
 
-func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName string, challengeFolderPath string, challenge model.Challenge, err error) {
+func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName string,
+	challengeFolderPath string, challenge model.Challenge, err error) {
 	vars := mux.Vars(r)
 	challengeName = vars["challengeName"]
 
@@ -120,6 +136,68 @@ func ChallengeShow(w http.ResponseWriter, r *http.Request) {
 	utils.SendResponseJSON(w, challenge)
 }
 
+func ChallengeExecute(w http.ResponseWriter, r *http.Request) {
+	challengeName, challengeFolderPath, challenge, err := getChallengeInfos(w, r)
+	if err != nil {
+		return
+	}
+
+	// TODO: change Challenge Model
+	authenticatedChallenges := map[string]bool{
+		"stored_xss": true,
+	}
+
+	registeredUser, user, _ := IsUserAuthenticated(w, r)
+	if !registeredUser && authenticatedChallenges[challengeName] {
+		w.WriteHeader(http.StatusForbidden)
+		utils.SendResponseJSON(w, utils.Message{"You need to be logged in to execute this challenge"})
+		return
+	}
+
+	var paramsRaw []byte
+	var paramsJSON map[string]*json.RawMessage
+	if err := utils.LoadJSONFromRequest(w, r, &paramsRaw); err != nil {
+		return
+	}
+	_ = json.Unmarshal(paramsRaw, &paramsJSON)
+
+	args := make([]string, len(challenge.Parameters), len(challenge.Parameters)+1)
+
+	for index, arg := range challenge.Parameters {
+		paramJSONVal, ok := paramsJSON[arg.Name]
+		if !ok {
+			args[index] = ""
+			continue
+		}
+		if err := json.Unmarshal(*paramJSONVal, &(args[index])); err != nil {
+			args[index] = ""
+		}
+	}
+
+	if authenticatedChallenges[challengeName] { // Inject User email
+		args = append([]string{user.Email}, args...)
+	}
+
+	out, err := customCommand(
+		challengeName,
+		challenge.Languages[0].Extension,
+		challengeFolderPath,
+		args...,
+	)
+
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		encouragingMessage := fmt.Sprintf("Looks like your request failed.. Here is your error : \"%v : %s\"", err, out)
+		utils.SendResponseJSON(w, utils.Message{encouragingMessage})
+		log.Printf("%v : %s\n", err, string(out[:]))
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	utils.SendResponseJSON(w, utils.Message{string(out[:])})
+}
+
+// Check if the submitted "secret" is the right one
 func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 	challengeName, challengeFolderPath, challenge, err := getChallengeInfos(w, r)
 	if err != nil {
@@ -149,8 +227,9 @@ func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 	}
 	realSecret, err := ioutil.ReadFile(challengeFolderPath + utils.FlagFileName)
 	if secret != string(realSecret[:]) {
+		message := "Not the good secret sorry. Be carefull with spaces when copy-pasting."
 		w.WriteHeader(http.StatusNotAcceptable)
-		utils.SendResponseJSON(w, utils.Message{"Not the good secret sorry. Be carefull with spaces when copy-pasting."})
+		utils.SendResponseJSON(w, utils.Message{message})
 		return
 	}
 
@@ -159,105 +238,18 @@ func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		utils.SendResponseJSON(w, utils.Message{"Your session seems expired, please login again"})
 		return
-	} else if !registeredUser {
-		w.WriteHeader(http.StatusOK)
-		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :) You did not earned any points because you're not logged in.\n" + challenge.ResolvedConclusion})
-		return
-	} else {
-
-		var alreadyValidated model.ValidatedChallenge
-		notFound := db.Where(&model.ValidatedChallenge{ChallengeID: challengeName, UserID: strconv.Itoa(int(user.ID))}).First(&alreadyValidated).RecordNotFound()
-		if !notFound && alreadyValidated.IsExploited {
-			w.WriteHeader(http.StatusNotAcceptable)
-			utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :) But you already exploited this challenge, so no points this time.\n" + challenge.ResolvedConclusion})
-			return
-		}
-
-		if !notFound {
-			// we found the validatedChallenge object but it wasn't exploited (the user just corrected the challenge, and now he exploits it)
-			alreadyValidated.IsExploited = true
-			if err := db.Save(&alreadyValidated).Error; err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				utils.SendResponseJSON(w, utils.InternalErrorMessage)
-				log.Printf("%v\n", err)
-				return
-			}
-		} else {
-			newValidatedChall := model.ValidatedChallenge{
-				ChallengeID:   challengeName,
-				UserID:        strconv.Itoa(int(user.ID)),
-				IsExploited:   true,
-				IsCorrected:   false,
-				DateValidated: time.Now(),
-			}
-			// this is a new validatedChallenge
-			if err := db.Create(&newValidatedChall).Error; err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				utils.SendResponseJSON(w, utils.InternalErrorMessage)
-				log.Printf("%v\n", err)
-				return
-			}
-		}
-
-		w.WriteHeader(http.StatusOK)
-		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :)\n" + challenge.ResolvedConclusion})
-	}
-}
-
-func ChallengeExecute(w http.ResponseWriter, r *http.Request) {
-	challengeName, challengeFolderPath, challenge, err := getChallengeInfos(w, r)
-	if err != nil {
-		return
 	}
 
-	// TODO: change Challenge Model
-	authenticatedCahllenges := map[string]bool{
-		"stored_xss": true,
-	}
-
-	registeredUser, user, _ := IsUserAuthenticated(w, r)
-	if !registeredUser && authenticatedCahllenges[challengeName] {
-		w.WriteHeader(http.StatusForbidden)
-		utils.SendResponseJSON(w, utils.Message{"You need to be logged in to execute this challenge"})
-		return
-	}
-
-	var paramsRaw []byte
-	var paramsJSON map[string]*json.RawMessage
-	if err := utils.LoadJSONFromRequest(w, r, &paramsRaw); err != nil {
-		return
-	}
-	_ = json.Unmarshal(paramsRaw, &paramsJSON)
-
-	args := make([]string, len(challenge.Parameters), len(challenge.Parameters)+1)
-
-	for index, arg := range challenge.Parameters {
-		paramJSONVal, ok := paramsJSON[arg.Name]
-		if !ok {
-			args[index] = ""
-			continue
-		}
-		if err := json.Unmarshal(*paramJSONVal, &(args[index])); err != nil {
-			args[index] = ""
-		}
-	}
-
-	if authenticatedCahllenges[challengeName] { // Inject User email
-		args = append([]string{user.Email}, args...)
-	}
-
-	cmd := challengeFolderPath + "wrapper"
-	out, err := customCommand(cmd, challengeFolderPath, args...)
+	var message string
+	message, err = updateValidatedChallenge(true, challengeName, challenge, user, registeredUser)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your request failed.. You might be on the good track. Here is your error : \"%v : %s\"", err, out)
-		utils.SendResponseJSON(w, utils.Message{encouragingMessage})
-		log.Printf("%v : %s\n", err, string(out[:]))
+		utils.SendResponseJSON(w, utils.InternalErrorMessage)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
-	utils.SendResponseJSON(w, utils.Message{string(out[:])})
+	utils.SendResponseJSON(w, utils.Message{message})
 }
 
 func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
@@ -266,27 +258,31 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var correctedScript model.CorrectedScript
-	var correctedScriptRaw []byte
-	err = utils.LoadJSONFromRequest(w, r, &correctedScriptRaw)
+	var correction model.CorrectedScript
+	var correctionRaw []byte
+	err = utils.LoadJSONFromRequest(w, r, &correctionRaw)
 	if err != nil {
 		return
 	}
-	err = json.Unmarshal(correctedScriptRaw, &correctedScript)
+	err = json.Unmarshal(correctionRaw, &correction)
 	if err != nil {
 		utils.SendResponseJSON(w, utils.BadRequestMessage)
 		log.Println(err)
 		return
 	}
 
-	encodedContent := base64.StdEncoding.EncodeToString([]byte(correctedScript.ContentScript))
-	cmd := utils.BasePath + "sandbox"
-	out, err := customCommand(cmd, challengeFolderPath, encodedContent, challengeName, correctedScript.LanguageExtension)
+	out, err := RunCorrection(
+		challengeFolderPath,
+		challengeName,
+		correction.ContentScript,
+		correction.LanguageExtension,
+	)
+
 	if err != nil {
 		w.WriteHeader(http.StatusNotAcceptable)
-		encouragingMessage := fmt.Sprintf("Mmmh.. Looks like your script is not perfect yet.. Here is your error : \"%v : %s\"", err, out)
+		encouragingMessage := fmt.Sprintf("Looks like your script is not perfect yet. Here is your error : \"%s\"", out)
 		utils.SendResponseJSON(w, utils.Message{encouragingMessage})
-		log.Printf("%v : %s\n", err, string(out[:]))
+		log.Printf("%v", err)
 		return
 	}
 
@@ -295,82 +291,108 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		utils.SendResponseJSON(w, utils.Message{"Your session seems expired, please login again"})
 		return
-	} else if !registeredUser {
-		w.WriteHeader(http.StatusOK)
-		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :) You did not earned any points because you're not logged in.\n" + challenge.ResolvedConclusion})
-	} else {
+	}
 
-		var alreadyValidated model.ValidatedChallenge
-		notFound := db.Where(&model.ValidatedChallenge{ChallengeID: challengeName, UserID: strconv.Itoa(int(user.ID))}).First(&alreadyValidated).RecordNotFound()
-		if !notFound && alreadyValidated.IsCorrected {
-			w.WriteHeader(http.StatusNotAcceptable)
-			utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :) But you already corrected this challenge, so no points this time.\n" + challenge.ResolvedConclusion})
+	var message string
+	message, err = updateValidatedChallenge(false, challengeName, challenge, user, registeredUser)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		utils.SendResponseJSON(w, utils.InternalErrorMessage)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	utils.SendResponseJSON(w, utils.Message{message})
+}
+
+func updateValidatedChallenge(exploited bool, challengeName string, challenge model.Challenge,
+	user model.User, registeredUser bool) (message string, err error) {
+
+	if !registeredUser {
+		message = fmt.Sprintf(
+			"Congratz !! You did it :)\nYou did not earned any points because you're not logged in.\n%s",
+			challenge.ResolvedConclusion,
+		)
+		return
+	}
+
+	var alreadyValidated model.ValidatedChallenge
+	notFound := db.Where(
+		&model.ValidatedChallenge{
+			ChallengeID: challengeName,
+			UserID:      strconv.Itoa(int(user.ID)),
+		},
+	).First(
+		&alreadyValidated,
+	).RecordNotFound()
+
+	if !notFound {
+		message = "Congratz !! You did it :) But you already %s this challenge, so no points this time.\n%s"
+		if exploited && alreadyValidated.IsExploited {
+			message = fmt.Sprintf(message, "exploited", challenge.ResolvedConclusion)
+			return
+		} else if !exploited && alreadyValidated.IsCorrected {
+			message = fmt.Sprintf(message, "corrected", challenge.ResolvedConclusion)
 			return
 		}
-
-		if !notFound {
-			// we found the validatedChallenge object but it wasn't corrected (the user just exploited the challenge, and now he corrects it)
-			alreadyValidated.IsCorrected = true
-			if err := db.Save(&alreadyValidated).Error; err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				utils.SendResponseJSON(w, utils.InternalErrorMessage)
-				log.Printf("%v\n", err)
-				return
-			}
-		} else {
-			newValidatedChall := model.ValidatedChallenge{
-				ChallengeID:   challengeName,
-				UserID:        strconv.Itoa(int(user.ID)),
-				IsExploited:   false,
-				IsCorrected:   true,
-				DateValidated: time.Now(),
-			}
-			// this is a new validatedChallenge
-			if err := db.Create(&newValidatedChall).Error; err != nil {
-				w.WriteHeader(http.StatusInternalServerError)
-				utils.SendResponseJSON(w, utils.InternalErrorMessage)
-				log.Printf("%v\n", err)
-				return
-			}
-		}
-		w.WriteHeader(http.StatusOK)
-		utils.SendResponseJSON(w, utils.Message{"Congratz !! You did it :)\n" + challenge.ResolvedConclusion})
 	}
+
+	if !notFound {
+		if exploited {
+			// we found the validatedChallenge object but it wasn't exploited,
+			// the user just corrected the challenge, and now he exploits it
+			alreadyValidated.IsExploited = true
+		} else {
+			// we found the validatedChallenge object but it wasn't corrected,
+			// the user just exploited the challenge, and now he corrects it
+			alreadyValidated.IsCorrected = true
+		}
+		if err = db.Save(&alreadyValidated).Error; err != nil {
+			log.Printf("%v\n", err)
+			return
+		}
+	} else {
+		newValidatedChall := model.ValidatedChallenge{
+			ChallengeID:   challengeName,
+			UserID:        strconv.Itoa(int(user.ID)),
+			IsExploited:   exploited,
+			IsCorrected:   !exploited,
+			DateValidated: time.Now(),
+		}
+		// this is a new validatedChallenge
+		if err = db.Create(&newValidatedChall).Error; err != nil {
+			log.Printf("%v\n", err)
+			return
+		}
+	}
+	message = "Congratz !! You did it :)\n" + challenge.ResolvedConclusion
+	return
 }
 
 func ChallengeInterpret(w http.ResponseWriter, r *http.Request) {
 
-	challengeName, challengeFolderPath, _, err := getChallengeInfos(w, r)
+	var snippet model.CorrectedScript
+	var snippetRaw []byte
+	err := utils.LoadJSONFromRequest(w, r, &snippetRaw)
 	if err != nil {
 		return
 	}
 
-	var correctedScript model.CorrectedScript
-	var correctedScriptRaw []byte
-	err = utils.LoadJSONFromRequest(w, r, &correctedScriptRaw)
-	if err != nil {
-		return
-	}
-	err = json.Unmarshal(correctedScriptRaw, &correctedScript)
+	err = json.Unmarshal(snippetRaw, &snippet)
 	if err != nil {
 		utils.SendResponseJSON(w, utils.BadRequestMessage)
 		log.Println(err)
 		return
 	}
 
-	encodedContent := base64.StdEncoding.EncodeToString([]byte(correctedScript.ContentScript))
-	cmd := utils.BasePath + "sandbox"
-	out, err := customCommand(
-		cmd,
-		challengeFolderPath,
-		encodedContent,
-		challengeName,
-		correctedScript.LanguageExtension,
-		"interpret",
-	)
+	output, err := RunSnippet(snippet.ContentScript, snippet.LanguageExtension)
+	if err != nil {
+		utils.SendResponseJSON(w, utils.InternalErrorMessage)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
-	utils.SendResponseJSON(w, utils.Message{out})
+	utils.SendResponseJSON(w, utils.Message{output})
 }
 
 func GetChallenges() (challenges model.Challenges, err error) {

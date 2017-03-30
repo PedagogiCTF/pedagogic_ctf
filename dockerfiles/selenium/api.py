@@ -2,6 +2,7 @@
 
 import logging
 
+from base64 import b64decode
 from logging.handlers import RotatingFileHandler
 
 import sqlite3
@@ -13,6 +14,7 @@ PORT = 8888
 NOT_LOGGED_PATH = (
     '/favicon.ico',
     '/internal/debug/get-comments',
+    '/internal/debug/get-logs',
 )
 
 CSS = """<head>
@@ -47,12 +49,15 @@ def create_app():
 
         if request.path not in NOT_LOGGED_PATH:
 
-            msg = "{} - {} {} ".format(
-                request.headers['Referer'].split('=')[1],
-                request.method,
-                request.url,
-            )
-            app.logger.warning(msg)
+            try:
+                msg = "{} - {} {} ".format(
+                    request.headers['Referer'].split('=')[1],
+                    request.method,
+                    request.url,
+                )
+                app.logger.warning(msg)
+            except KeyError:
+                pass
 
     @app.route('/internal/debug/get-comments')
     def get_comments():
@@ -60,14 +65,12 @@ def create_app():
         # To filter only comments for current user (because the db is shared)
         author = request.args['client']
 
-        # Because correction context has a dedicated db
-        db_path = request.args.get('db')
+        dump = request.args.get('db_dump')
 
-        if not db_path or db_path == 'None':
-            db_path = '/tmp/stored_xss.db'
-
-        conn = sqlite3.connect(db_path, isolation_level=None)
+        conn = sqlite3.connect(":memory:")
         cursor = conn.cursor()
+        cursor.executescript(b64decode(dump).decode())
+
         comments = cursor.execute(
             "SELECT author, comment from comments WHERE author IN (?, ?)",
             ('admin', author)
@@ -87,6 +90,19 @@ def create_app():
         response = response + "</table>"
         return response
 
+    @app.route('/internal/debug/get-logs')
+    def get_logs():
+
+        author = request.args['client']
+
+        with open('/tmp/api.log', 'r') as log:
+            srv_logs = log.readlines()
+
+        srv_logs = '<br>'.join([l.strip() for l in srv_logs if author in l or '* Running' in l])
+        srv_logs = srv_logs.replace('http://{}'.format(HOST), 'http://evil.com')
+
+        return srv_logs
+
     return app
 
 
@@ -104,7 +120,7 @@ def main():
 
     app.logger.addHandler(handler)
     app.logger.warning('* Running on http://{}:{}/ (Press CTRL+C to quit)'.format(HOST, PORT))
-    app.run(host=HOST, port=PORT)
+    app.run(host="0.0.0.0", port=PORT)
 
 
 if __name__ == '__main__':

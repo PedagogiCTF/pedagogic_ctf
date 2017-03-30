@@ -1,0 +1,6 @@
+bleach
+bs4
+flask
+lxml
+pycrypto
+requests
