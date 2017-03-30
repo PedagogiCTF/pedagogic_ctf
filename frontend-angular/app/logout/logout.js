@@ -41,5 +41,6 @@ angular.module('myApp.logout', ['ngRoute', 'ngCookies'])
                 timeout: 3000 + error.message.length * 25
             });
         });
+        $cookies.remove('user');
     }
 }]);
