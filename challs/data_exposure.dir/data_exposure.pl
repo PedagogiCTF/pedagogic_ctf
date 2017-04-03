@@ -32,7 +32,14 @@ $app->routes->get('/encrypted-text' => sub {
     # 3) Use military grade encryption cipher
     eval {
 #-literal_key    If true, the key provided by "key" is used directly for encryption/decryption.  Otherwise the actual key used will be a hash of the provided key.  (default false)
-      my $cbc = Crypt::CBC->new( -cipher=>'Cipher::AES',-header=>'none', -key=>$secretKey, -iv=>$iv, -padding=>"none", -literal_key=>1, -keysize=>16);
+      my $cbc = Crypt::CBC->new( 
+            -cipher=>'Cipher::AES',
+            -header=>'none', 
+            -key=>$secretKey, 
+            -iv=>$iv, 
+            -padding=>"none", 
+            -keysize=>16
+      );
       my $ciphertext = $cbc->encrypt($plain);
       return $c->render(
         status => 200,
@@ -62,7 +69,7 @@ sub main {
         }
       else { $plain = $ARGV[0]; }
     }
-
+    
     my $endpoint = '/encrypted-text';
 
     my $url = Mojo::URL->new($endpoint);

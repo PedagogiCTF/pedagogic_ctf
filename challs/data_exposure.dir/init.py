@@ -2,6 +2,9 @@
 
 import sys
 
+from random import choice
+from string import ascii_lowercase
+
 
 def init_secrets(secret):
 
@@ -9,7 +12,7 @@ def init_secrets(secret):
         _file.write(secret)
 
     with open('key', "w") as _file:
-        _file.write(secret)
+        _file.write(''.join(choice(ascii_lowercase) for i in range(16)))
 
 
 def main():
