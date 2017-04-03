@@ -55,7 +55,7 @@
                                             placeholder="{{ parameter.placeholder}}">
                                     </div>
                                 </div>
-                                <button class="btn btn-raised btn-info" ng-click="execute(challenge.challenge_id)">
+                                <button class="btn btn-raised btn-info" ng-click="execute(challenge.challenge_id, language.name)">
 				                <span ng-show="executeButtonText == 'Processing'">
 					            <i class="material-icons spinning">autorenew</i>
 				                </span>
@@ -91,7 +91,7 @@
                                 }
 				            }" style="height:500px;">
                         </div>
-                        <button class="btn btn-raised btn-info" ng-click="correct(challenge.challenge_id, language.extension)">
+                        <button class="btn btn-raised btn-info" ng-click="correct(challenge.challenge_id, language.extension, language.name)">
 				            <span ng-show="correctButtonText == 'Checking'">
 					        <i class="material-icons spinning">autorenew</i>
 				            </span>
@@ -113,7 +113,7 @@
                                 }
 				            }" style="height:350px;">
                         </div>
-                        <button class="btn btn-raised btn-info" ng-click="interpret(challenge.challenge_id, language.extension)">
+                        <button class="btn btn-raised btn-info" ng-click="interpret(challenge.challenge_id, language.extension, language.name)">
 				            <span ng-show="interpretButtonText == 'Processing'">
 					        <i class="material-icons spinning">autorenew</i>
 				            </span>

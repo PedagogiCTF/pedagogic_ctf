@@ -84,7 +84,7 @@ angular.module('myApp')
         );
     };
 
-    $scope.execute = function(challengeId) {
+    $scope.execute = function(challengeId, language) {
 
         $http.defaults.headers.common['X-CTF-AUTH'] = $scope.user.token;
         var title = "";
@@ -92,6 +92,8 @@ angular.module('myApp')
 
         var previousButtonText = $scope.executeButtonText;
         $scope.executeButtonText = "Processing";
+       
+        $scope.requestExecute[challengeId].language = language;
 
         Challenges.execute({
             id: challengeId
@@ -140,7 +142,7 @@ angular.module('myApp')
         });
     };
 
-    $scope.correct = function(challengeId, extension) {
+    $scope.correct = function(challengeId, extension, language) {
 
         $http.defaults.headers.common['X-CTF-AUTH'] = $scope.user.token;
         var title = "";
@@ -148,7 +150,7 @@ angular.module('myApp')
         var previousButtonText = $scope.correctButtonText;
 
         $scope.correctButtonText = "Checking";
-        $scope.requestCorrect[challengeId][extension].language_extension = extension;
+        $scope.requestCorrect[challengeId][extension].language = language;
         Challenges.correct({
             id: challengeId
         }, $scope.requestCorrect[challengeId][extension]).$promise.then(
@@ -166,7 +168,7 @@ angular.module('myApp')
         });
     };
 
-    $scope.interpret = function(challengeId, extension) {
+    $scope.interpret = function(challengeId, extension, language) {
 
         $http.defaults.headers.common['X-CTF-AUTH'] = $scope.user.token;
         var title = "";
@@ -174,7 +176,7 @@ angular.module('myApp')
         var previousButtonText = $scope.interpretButtonText;
         $scope.interpretButtonText = "Processing";
 
-        $scope.requestInterpret[challengeId][extension].language_extension = extension;
+        $scope.requestInterpret[challengeId][extension].language = language;
         Challenges.interpret({
             id: challengeId
         }, $scope.requestInterpret[challengeId][extension]).$promise.then(
@@ -227,6 +229,7 @@ angular.module('myApp')
             function(response) {
                 $scope.challenges = response;
                 for (var i = 0; i < $scope.challenges.length; ++i) {
+                    $scope.requestExecute[$scope.challenges[i].challenge_id] = {};
                     $scope.requestCorrect[$scope.challenges[i].challenge_id] = {};
                     $scope.requestInterpret[$scope.challenges[i].challenge_id] = {};
                 }

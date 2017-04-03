@@ -16,7 +16,7 @@ spinner()
 }
 
 echo " [*] Installing dependencies"
-sudo apt-get update && sudo apt-get install --fix-missing -y build-essential python3 golang-1.7 perl libauthen-passphrase-perl libmojolicious-perl libdigest-sha-perl libdbi-perl libdbd-sqlite3-perl libhtml-scrubber-perl libhtml-defang-perl libcrypt-cbc-perl libstring-random-perl python3-pip openssl dnsutils && pip3 install -r requirements.txt &
+sudo apt-get update && sudo apt-get install --fix-missing -y build-essential python3 golang-1.7 perl libauthen-passphrase-perl libmojolicious-perl libdigest-sha-perl libdbi-perl libdbd-sqlite3-perl libhtml-scrubber-perl libhtml-defang-perl libcrypt-cbc-perl libstring-random-perl python3-pip openssl dnsutils && pip3 install -r requirements.txt > /dev/null &
 spinner $! 
 
 echo " [*] Building Go API"
