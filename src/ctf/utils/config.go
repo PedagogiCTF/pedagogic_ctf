@@ -24,6 +24,7 @@ func GetConfig() *Configuration {
 	return &configuration
 }
 
+const LocalDiskLabel = "/dev/vda"
 const ChallengeFolder = "challs/"
-const BasePath = "/home/admin/dev/pedagogic_ctf/"
+const BasePath = "/home/user/pedagogic_ctf/"
 const FlagFileName = "secret"

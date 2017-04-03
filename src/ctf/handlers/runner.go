@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"ctf/utils"
 	"errors"
 	"fmt"
 	dcli "github.com/fsouza/go-dockerclient"
@@ -225,7 +226,7 @@ func (r *Runner) createContainer(image string, cmd []string) error {
 
 	writeLimit := []dcli.BlockLimit{
 		dcli.BlockLimit{
-			Path: "/dev/vda",
+			Path: utils.LocalDiskLabel,
 			Rate: 3000000,
 		},
 	}
