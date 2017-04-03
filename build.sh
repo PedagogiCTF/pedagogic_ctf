@@ -16,13 +16,18 @@ spinner()
 }
 
 echo " [*] Installing dependencies"
-sudo apt-get update && sudo apt-get install --fix-missing -y build-essential python3 golang-1.7 perl libauthen-passphrase-perl libmojolicious-perl libdigest-sha-perl libdbi-perl libdbd-sqlite3-perl libhtml-scrubber-perl libhtml-defang-perl libcrypt-cbc-perl libstring-random-perl python3-pip python3-lxml openssl dnsutils > /dev/null &
-spinner $! 
+sudo apt-get update && sudo apt-get install --fix-missing -y build-essential python3 golang-1.7 perl libauthen-passphrase-perl libmojolicious-perl libdigest-sha-perl libdbi-perl libdbd-sqlite3-perl libhtml-scrubber-perl libhtml-defang-perl libcrypt-cbc-perl libstring-random-perl python3-pip python3-lxml openssl dnsutils libxml2-dev libxslt1-dev npm > /dev/null &
+spinner $!
+sudo cpan MIK/CryptX-0.044.tar.gz
 echo " [*] Installing Python dependencies"
-pip3 install --user -r requirements.txt > /dev/null &
+virtualenv -p /usr/bin/python3 venv
+source venv/bin/activate
+pip3 install -r requirements.txt > /dev/null &
 spinner $! 
 
 echo " [*] Building Go API"
+sudo groupadd docker
+sudo gpasswd -a ${USER} docker
 go build src/ctf/main/main.go &
 spinner $! 
 
@@ -33,7 +38,12 @@ do
     cat challs/${chall_name}.dir/${chall_name}.json | python -c "import json, sys; chall = json.loads(''.join([line for line in sys.stdin])); chall['challenge_id']=sys.argv[1]; f=open('challenges.json', 'r'); challs=json.loads(f.read()); challs.append(chall); f.close(); f=open('challenges.json', 'w');f.write(json.dumps(challs));f.close()" $chall_name
 done
 
-cd dockerfiles
+echo " [*] Building AngularJS app"
+sudo ln -s /usr/bin/nodejs /usr/bin/node
+sudo npm install -g bower
+cd frontend-angular && bower install --allow-root
+
+cd ../dockerfiles
 for dir in */ ; do
     cd $dir
     image=`echo $dir|sed "s/\///"`

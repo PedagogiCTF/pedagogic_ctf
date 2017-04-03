@@ -34,12 +34,7 @@ Now you must create the json file that will describe your challenge,
 }
 ```
 
-add your challenge named after $NEW_CHALL_NAME.pl, this could be any script , don't be fooled by the extention.
-Create a check() funtion in  check.py that will return 1 if you challenge is still usable
-Create a exploit() function in exploit.py that will return 1 if you challenge is still hackable
-then add your new challenge into init.sh :
-  
-  echo "userdel $NEW_CHALL_NAME" >> init.sh
-  echo "(cd /srv/ctf_go/ && ./load_challenges.py $NEW_CHALL_NAME)" >> init.sh
-  ./init.sh    
-    
+Create a init.py script that will init challenges dependencies (db, secrets ...)
+Create a check.py script that will return 2 if you challenge is still usable
+Create a exploit.py script that will return 3 if you challenge is still hackable
+then re-run init.sh :
