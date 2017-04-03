@@ -17,9 +17,9 @@ def run_cmd(correction_file, args):
         args.insert(0, 'go')
 
     child = subprocess.Popen(args, stdout=subprocess.PIPE)
-    streamdata = child.communicate()[0]
+    out = child.communicate()[0]
     ret = child.returncode
-    return streamdata.decode(), ret
+    return out.decode(), ret
 
 
 def check(correction_file, secret):
@@ -56,9 +56,13 @@ def check(correction_file, secret):
 
     for _check in checks:
 
-        streamdata, return_code = run_cmd(correction_file, _check['params'])
-        if return_code != 0 or _check['response'] not in streamdata.lower():
-            print(_check['message'].format(streamdata))
+        out, return_code = run_cmd(correction_file, _check['params'])
+        if return_code != 0:
+            print("Invalid execution : {}".format(out))
+            sys.exit(1)
+
+        if _check['response'] not in out.lower():
+            print(_check['message'].format(out))
             return False
 
     return True
@@ -68,7 +72,7 @@ def main():
 
     correction_file = sys.argv[1]
     secret = sys.argv[2]
-    return_code = 0 if check(correction_file, secret) else 1
+    return_code = 0 if check(correction_file, secret) else 2
     sys.exit(return_code)
 
 

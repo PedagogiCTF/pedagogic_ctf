@@ -1,6 +1,19 @@
-import os
+#!/usr/bin/python3
+
+import sys
 
 
-def init(path, randomize, file_challenge_name=None):
-    with open(os.path.join(path, 'secret'), "w") as secret:
-        secret.write(randomize)
+def init_secret(secret):
+
+    with open('secret', "w") as _file:
+        _file.write(secret)
+
+
+def main():
+
+    secret = sys.argv[2]
+    init_secret(secret)
+
+
+if __name__ == "__main__":
+    main()

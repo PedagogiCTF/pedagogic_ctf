@@ -2,15 +2,11 @@
 
 import os
 import sqlite3
+import sys
+
 from base64 import b64encode
 from random import randrange
 from hashlib import sha1
-
-
-def init(path, randomize, file_challenge_name=None):
-
-    init_db(path, file_challenge_name)
-    init_secret(path, randomize)
 
 
 def generate_user_token():
@@ -20,25 +16,11 @@ def generate_user_token():
     return sha1(b64encode(bytes(randrange(1, 99999)))).hexdigest()
 
 
-def init_db(path, file_challenge_name):
+def init_db(db_user):
 
     db = os.path.join(os.path.sep, "tmp", "misconfiguration.db")
-    context_db = db
 
-    if file_challenge_name:
-        context_db = os.path.join(path, "misconfiguration.db")
-        file_challenge_path = os.path.join(path, file_challenge_name)
-        with open(file_challenge_path, "r") as chall:
-            file_chall_content = chall.read()
-            new_file_chall_content = file_chall_content.replace(db, context_db)
-        with open(file_challenge_path, "w") as chall:
-            chall.write(new_file_chall_content)
-
-    need_chmod = False
-    if db == context_db:
-        need_chmod = True
-
-    conn = sqlite3.connect(context_db)
+    conn = sqlite3.connect(db)
     cur = conn.cursor()
     cur.execute("DROP TABLE IF EXISTS users")
     conn.commit()
@@ -58,12 +40,23 @@ def init_db(path, file_challenge_name):
     conn.commit()
     conn.close()
 
-    if need_chmod:
-        os.system('chown misconfiguration:misconfiguration ' + context_db)
-        os.system('chmod 640 ' + context_db)
+    os.system('chown {}:{} {}'.format(db_user, db_user, db))
+    os.system('chmod 640 ' + db)
 
 
-def init_secret(path, randomize):
+def init_secret(secret):
 
-    with open(os.path.join(path, 'secret'), "w") as secret:
-        secret.write(randomize)
+    with open('secret', "w") as _file:
+        _file.write(secret)
+
+
+def main():
+
+    secret = sys.argv[2]
+    user = sys.argv[3]
+    init_db(user)
+    init_secret(secret)
+
+
+if __name__ == "__main__":
+    main()

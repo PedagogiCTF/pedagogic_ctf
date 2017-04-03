@@ -30,26 +30,31 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func customCommand(filename, extension, dir string, args ...string) (out string, err error) {
+func customCommand(filename, language, dir string, args ...string) (out string, err error) {
 	// https://medium.com/@vCabbage/go-timeout-commands-with-os-exec-commandcontext-ba0c861ed738#.grao7dugq
 
 	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
 	defer cancel() // The cancel should be deferred so resources are cleaned up
 
-	file := filename + extension
-	args = append([]string{file}, args...)
-
 	var interpreter string
-	switch extension {
-	case ".py":
+	var extension string
+
+	switch language {
+	case "PYTHON":
 		interpreter = "python3"
-	case ".pl":
+		extension = ".py"
+		args = append([]string{filename + extension}, args...)
+	case "PERL":
 		interpreter = "perl"
-	case ".go":
+		extension = ".pl"
+		args = append([]string{filename + extension}, args...)
+	case "GOLANG":
 		interpreter = "go"
+		extension = ".go"
+		args = append([]string{filename + extension}, args...)
 		args = append([]string{"run"}, args...)
 	default:
-		return "", errors.New("Invalid extension")
+		return "", errors.New("Invalid language")
 	}
 
 	cmd := exec.CommandContext(ctx, interpreter)
@@ -161,6 +166,15 @@ func ChallengeExecute(w http.ResponseWriter, r *http.Request) {
 	}
 	_ = json.Unmarshal(paramsRaw, &paramsJSON)
 
+	var language string
+	paramJSONVal, ok := paramsJSON["language"]
+	if !ok {
+		w.WriteHeader(http.StatusBadRequest)
+		utils.SendResponseJSON(w, utils.Message{"Missing language argument"})
+		return
+	}
+	json.Unmarshal(*paramJSONVal, &language)
+
 	args := make([]string, len(challenge.Parameters), len(challenge.Parameters)+1)
 
 	for index, arg := range challenge.Parameters {
@@ -180,7 +194,7 @@ func ChallengeExecute(w http.ResponseWriter, r *http.Request) {
 
 	out, err := customCommand(
 		challengeName,
-		challenge.Languages[0].Extension,
+		language,
 		challengeFolderPath,
 		args...,
 	)
@@ -275,7 +289,7 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 		challengeFolderPath,
 		challengeName,
 		correction.ContentScript,
-		correction.LanguageExtension,
+		correction.Language,
 	)
 
 	if err != nil {
@@ -385,7 +399,7 @@ func ChallengeInterpret(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	output, err := RunSnippet(snippet.ContentScript, snippet.LanguageExtension)
+	output, err := RunSnippet(snippet.ContentScript, snippet.Language)
 	if err != nil {
 		utils.SendResponseJSON(w, utils.InternalErrorMessage)
 		return

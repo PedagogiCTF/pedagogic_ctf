@@ -48,7 +48,7 @@ def victim_browse(user_email, secret):
     )
 
     while job.status != 'finished':
-        sleep(0.2)
+        sleep(0.3)
 
     return job.result
 

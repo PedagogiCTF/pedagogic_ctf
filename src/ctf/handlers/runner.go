@@ -22,16 +22,18 @@ type Runner struct {
 }
 
 const (
-	STATUS_CORRECTION_FAILED = 1
-	STATUS_SUCCESS           = 0
-	STATUS_TIMED_OUT         = -1
+	STATUS_EXPLOITABLE  = 3
+	STATUS_CHECK_FAILED = 2
+	STATUS_FAILED       = 1
+	STATUS_SUCCESS      = 0
+	STATUS_TIMED_OUT    = -1
 )
 
-func RunSnippet(code, extension string) (output string, err error) {
+func RunSnippet(code, language string) (output string, err error) {
 
 	runner := NewRunner(
 		dockerClient(),
-		extension,
+		language,
 		code,
 	)
 	defer runner.cleanup()
@@ -52,11 +54,11 @@ func RunSnippet(code, extension string) (output string, err error) {
 	return
 }
 
-func RunCorrection(challengeFolderPath, challengeName, code, extension string) (output string, err error) {
+func RunCorrection(challengeFolderPath, challengeName, code, language string) (output string, err error) {
 
 	runner := NewRunner(
 		dockerClient(),
-		extension,
+		language,
 		code,
 	)
 	defer runner.cleanup()
@@ -75,9 +77,15 @@ func RunCorrection(challengeFolderPath, challengeName, code, extension string) (
 
 	output, err = runner.getLogs()
 
-	if status == STATUS_CORRECTION_FAILED {
+	failedStatus := map[int]bool{
+		STATUS_EXPLOITABLE:  true,
+		STATUS_CHECK_FAILED: true,
+		STATUS_FAILED:       true,
+	}
+	if failedStatus[status] {
 		return output, errors.New(output)
 	}
+
 	return
 }
 
@@ -218,7 +226,7 @@ func (r *Runner) createContainer(image string, cmd []string) error {
 	writeLimit := []dcli.BlockLimit{
 		dcli.BlockLimit{
 			Path: "/dev/vda",
-			Rate: 1000000,
+			Rate: 3000000,
 		},
 	}
 
@@ -232,7 +240,7 @@ func (r *Runner) createContainer(image string, cmd []string) error {
 
 	config := &dcli.Config{
 		CPUShares: 2,
-		Memory:    50e6,
+		Memory:    100e6,
 		Tty:       false,
 		OpenStdin: false,
 		Cmd:       cmd,
@@ -309,14 +317,12 @@ func (r *Runner) cleanup() {
 
 func extForLanguage(lang string) (string, error) {
 	switch lang {
-	case ".go":
+	case "GOLANG":
 		return "go", nil
-	case ".pl":
+	case "PERL":
 		return "pl", nil
-	case ".py":
+	case "PYTHON":
 		return "py", nil
-	case ".sh":
-		return "sh", nil
 	}
 	return "", fmt.Errorf("Invalid language %v", lang)
 }

@@ -1,23 +1,22 @@
 #!/usr/bin/python3
 
-import os
-from random import choice
-from string import ascii_lowercase
+import sys
 
 
-def init(path, randomize, file_challenge_name=None):
+def init_secrets(secret):
 
-    init_secret(path, randomize)
-    init_key(path, randomize)
+    with open('secret', "w") as _file:
+        _file.write(secret)
 
-
-def init_secret(path, randomize):
-
-    with open(os.path.join(path, 'secret'), "w") as secret:
-        secret.write(''.join(choice(ascii_lowercase) for i in range(16)))
+    with open('key', "w") as _file:
+        _file.write(secret)
 
 
-def init_key(path, randomize):
+def main():
 
-    with open(os.path.join(path, 'key'), "w") as secret:
-        secret.write(''.join(choice(ascii_lowercase) for i in range(16)))
+    secret = sys.argv[2]
+    init_secrets(secret)
+
+
+if __name__ == "__main__":
+    main()

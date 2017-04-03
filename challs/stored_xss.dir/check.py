@@ -41,8 +41,8 @@ def check(correction_file):
 
     out, return_code = run_cmd(correction_file, [user, 'test'])
     if return_code != 0:
-        print("Invalid execution : {}".format(user))
-        return False
+        print("Invalid execution : {}".format(out))
+        sys.exit(1)
 
     if not all(k in out.lower() for k in ('running', 'base64', 'img', '8888')):
         print("Unable to validate victim_browser.py output: {}".format(out))
@@ -65,7 +65,7 @@ def check(correction_file):
     response = requests.get(path).text
 
     if '<tr><td>{}</td><td>test</td></tr>'.format(user) not in response:
-        print("POST comments seems broken, unable to find 'test' in {}".format(response))
+        print("POST comments seems broken, unable to find test comment in {}".format(response))
         return False
 
     return True
@@ -74,7 +74,7 @@ def check(correction_file):
 def main():
 
     correction_file = sys.argv[1]
-    return_code = 0 if check(correction_file) else 1
+    return_code = 0 if check(correction_file) else 2
     sys.exit(return_code)
 
 

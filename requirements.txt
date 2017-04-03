@@ -1,11 +1,9 @@
+bcrypt
 bleach
 bs4
 flask
 html5lib
 lxml
-mock
 pycrypto
-pyvirtualdisplay
 requests
 rq
-selenium
