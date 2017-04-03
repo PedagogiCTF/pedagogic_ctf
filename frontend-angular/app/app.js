@@ -2,24 +2,20 @@
 
 // Declare app level module which depends on views, and components
 angular.module('myApp', [
+    'ngResource',
     'ngRoute',
-    'myApp.index',
+    'angularModalService',
+    'ui.ace',
     'myApp.style',
     'myApp.scoreboard',
     'myApp.register',
     'myApp.login',
     'myApp.logout',
     'myApp.profile',
-]).config(['$locationProvider', '$routeProvider', function ($locationProvider, $routeProvider) {
+]).config(['$locationProvider', '$routeProvider', function($locationProvider, $routeProvider) {
     $locationProvider.hashPrefix('!');
 
-    $routeProvider.otherwise({redirectTo: '/'});
-}])
-
-    .factory('UserService', function () {
-        return {
-            isLoggedIn: false,
-            email: "anonymous",
-            token: ""
-        };
+    $routeProvider.otherwise({
+        redirectTo: '/'
     });
+}]);

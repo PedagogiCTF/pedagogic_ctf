@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"os"
 	"encoding/json"
 	"log"
+	"os"
 )
 
 type Configuration struct {
@@ -13,7 +13,7 @@ type Configuration struct {
 
 func GetConfig() *Configuration {
 	file, err := os.Open(BasePath + "src/ctf/utils/config.json")
-	if err != nil{
+	if err != nil {
 		log.Println(err)
 	}
 	decoder := json.NewDecoder(file)
@@ -24,6 +24,7 @@ func GetConfig() *Configuration {
 	return &configuration
 }
 
+const LocalDiskLabel = "/dev/vda"
 const ChallengeFolder = "challs/"
-const BasePath = "/srv/ctf_go/"
+const BasePath = "/home/user/pedagogic_ctf/"
 const FlagFileName = "secret"

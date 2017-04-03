@@ -1,0 +1,7 @@
+bs4
+flask
+mock
+pyvirtualdisplay
+requests
+rq
+selenium

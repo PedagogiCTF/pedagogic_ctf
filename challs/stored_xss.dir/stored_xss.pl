@@ -70,7 +70,7 @@ sub main {
         print "Missing comment";
         exit 0;
     }
-    
+
     my $url = Mojo::URL->new("/comments");
     my $ua = Mojo::UserAgent->new();
     $ua->server->app($app);

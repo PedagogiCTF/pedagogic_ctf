@@ -5,7 +5,6 @@ import (
 	"ctf/model"
 	"ctf/utils"
 	"github.com/gorilla/mux"
-	"net/http"
 )
 
 var routes = model.Routes{
@@ -50,6 +49,12 @@ var routes = model.Routes{
 		"POST",
 		"/v1.0/challenge/{challengeName}/correct",
 		handlers.ChallengeCorrect,
+	},
+	model.Route{
+		"RunSnippet",
+		"POST",
+		"/v1.0/challenge/{challengeName}/interpret",
+		handlers.ChallengeInterpret,
 	},
 	model.Route{
 		"UserAuthenticate",
@@ -119,10 +124,5 @@ func NewRouter() *mux.Router {
 			Name(route.Name).
 			Handler(handler)
 	}
-	if !utils.GetConfig().IsProduction {
-		router.PathPrefix("/").Handler(http.FileServer(http.Dir("/srv/ctf_go/frontend-angular/app/")))
-		http.Handle("/", router)
-	}
-
 	return router
 }

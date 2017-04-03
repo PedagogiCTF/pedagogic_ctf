@@ -8,35 +8,31 @@ You will be able to exploit simple programs with the source code in front of you
 
 Please feel free to contribute ! See in the */challs* directory for instructions of how to add challenges. Feel free to contact me on github or at: **hugodelval [at] gmail [dot] com**
 
-## Run with docker
+## Getting Started
 
 ### Installation
 
-Installation varies a lot depending on your system. Please refer to the official documentation (kept up to date !) here : https://docs.docker.com/engine/installation/linux/debian (for example).
+Tested on Debian 8.7, golang 1.7.4 and docker 17.03.0-ce
+
+Build containers, Go Api and AngularJS App:
+
+`./build.sh`
+
+Init challenges:
+
+`./init.sh`
 
 ### Running !
 
-Easy :)
-
-	docker run -t -p 8081:80 hugodelval/pedagogic-ctf
-
-Then open your browser here: http://localhost:8081
-
-If you need to make changes, help yourself, then launch:
-
-	docker build . -t hugodelval/pedagogic-ctf
-
-To kill the running app press Ctrl-C then :
-	
-	docker ps
-	docker kill <CONTAINER ID>
+`./run.sh`
 
 ## How does it work?
 
-The user can do 2 things :
+The user can do 3 things :
 
 - exploit programs (and learn the vulnerability)
 - correct challenges (learn how to fix the vulnerability)
+- test and debug in playground
 
 ### Exploit
 
@@ -49,9 +45,9 @@ If the user finds the secret, he can submit it to the server, which will check t
 The user can then correct the program:
 
 1. the user send the corrected code
-2. the server copies the code in a new temporary directory and create a temporary user (+chmod / chown...)
-4. the server executes (with the new temp user's permissions) the init script of the program (init.py) this initialise the program, create secrets, databases and so on...
-5. the server executes the user code (with the new temp user's permissions) using several tests that check if the program still works (challs/*/check.py)
-6. the server executes the user code (with the new temp user's permissions) using several tests that check if the program is no more exploitable (challs/*/exploit.py)
-7. the server delete the temporary folder and user
+2. the server copies the code in a new temporary directory and start a docker instance mapping it
+4. the docker's entrypoint executes the init script of the program (init.py). This initialise the program, create secrets, databases and so on...
+5. the docker's entrypoint executes submitted code using several tests that check if the program still works (challs/*/check.py)
+6. the docker's entrypoint executes submitted code using several tests that check if the program is no more exploitable (challs/*/exploit.py)
+7. the server stops the container and deletes the temporary folder
 8. the server gives points to the users if the program still works and is no more exploitable

@@ -5,10 +5,8 @@ bin/
 venv/
 *.pyc
 *.swp
-ctf_go.iml
-.DS_Store
 challenges.json
-challs/*.dir/wrapper*
+challs/*.dir/key
 challs/*.dir/secret
 src/github.com/
 src/golang.org/

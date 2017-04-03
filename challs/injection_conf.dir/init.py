@@ -1,5 +1,28 @@
-import os
+#!/usr/bin/python3
 
-def init(path, randomize, file_challenge_name=None):
-	with open(os.path.join(path, 'secret'), "w") as secret:
-		secret.write(randomize)
+import os
+import sys
+
+
+def init_directory():
+
+    directory = '/tmp/injection_conf'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+def init_secret(secret):
+
+    with open('secret', "w") as _file:
+        _file.write(secret)
+
+
+def main():
+
+    secret = sys.argv[2]
+    init_directory()
+    init_secret(secret)
+
+
+if __name__ == "__main__":
+    main()
