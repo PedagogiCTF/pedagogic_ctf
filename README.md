@@ -22,6 +22,8 @@ Init challenges:
 
 `./init.sh`
 
+Now, please add entry '127.0.0.1 evil.com my-site.com selenium.pedagogic_ctf' to your /etc/hosts file.
+
 ### Running !
 
 `./run.sh`
