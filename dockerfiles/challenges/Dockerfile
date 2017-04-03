@@ -16,7 +16,8 @@ RUN apt-get update -y && apt-get install --fix-missing -y \
     libcrypt-cbc-perl \
     libstring-random-perl \
     python3-pip \
-    python3-bcrypt
+    openssl\
+    dnsutils
 RUN export PERL_MM_USE_DEFAULT=1
 RUN cpan CryptX
 COPY requirements.txt /

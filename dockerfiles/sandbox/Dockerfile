@@ -15,8 +15,7 @@ RUN apt-get update -y && apt-get install --fix-missing -y \
     libhtml-defang-perl \
     libcrypt-cbc-perl \
     libstring-random-perl \
-    python3-pip \
-    python3-bcrypt
+    python3-pip 
 RUN export PERL_MM_USE_DEFAULT=1
 RUN cpan CryptX
 COPY requirements.txt /
