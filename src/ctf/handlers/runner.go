@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"bytes"
-	"ctf/utils"
+	"ctf/config"
 	"errors"
 	"fmt"
 	dcli "github.com/fsouza/go-dockerclient"
@@ -15,14 +15,21 @@ import (
 )
 
 type Runner struct {
-	ContainerId string
-	CodeDir     string
-	Language    string
-	Code        string
-	client      *dcli.Client
+	RunnerType          string
+	ContainerId         string
+	CodeDir             string
+	ChallengeName       string
+	ChallengeFolderPath string
+	Language            string
+	Code                string
+	MapDatabase         bool
+	client              *dcli.Client
 }
 
 const (
+	RUNNER_SNIPPET      = "SNIPPET"
+	RUNNER_EXPLOITATION = "EXPLOITATION"
+	RUNNER_CORRECTION   = "RUNNER_CORRECTION"
 	STATUS_EXPLOITABLE  = 3
 	STATUS_CHECK_FAILED = 2
 	STATUS_FAILED       = 1
@@ -38,6 +45,8 @@ func RunSnippet(code, language string) (output string, err error) {
 		code,
 	)
 	defer runner.cleanup()
+
+	runner.RunnerType = RUNNER_SNIPPET
 
 	var status int
 	status, err = runner.Run("sandbox", []string{}, "", 3000)
@@ -55,17 +64,33 @@ func RunSnippet(code, language string) (output string, err error) {
 	return
 }
 
-func RunCorrection(challengeFolderPath, challengeName, code, language string) (output string, err error) {
+func RunExploitation(challengeName, language, challengeFolderPath string, args []string) (output string, err error) {
+
+	var extension string
+	extension, err = extForLanguage(language)
+	if err != nil {
+		return
+	}
+
+	fileName := fmt.Sprintf("%s.%s", challengeName, extension)
+	code, err := ioutil.ReadFile(path.Join(challengeFolderPath, fileName))
+	if err != nil {
+		return
+	}
 
 	runner := NewRunner(
 		dockerClient(),
 		language,
-		code,
+		string(code[:]),
 	)
 	defer runner.cleanup()
 
+	runner.RunnerType = RUNNER_EXPLOITATION
+	runner.ChallengeFolderPath = challengeFolderPath
+	runner.ChallengeName = challengeName
+
 	var status int
-	status, err = runner.Run("challenges", []string{"code"}, challengeFolderPath, 7000)
+	status, err = runner.Run("exploitation", args, "", 10000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return
@@ -85,6 +110,44 @@ func RunCorrection(challengeFolderPath, challengeName, code, language string) (o
 	}
 	if failedStatus[status] {
 		return output, errors.New(output)
+	}
+
+	return
+}
+
+func RunCorrection(challengeFolderPath, code, language string) (output string, status int, err error) {
+
+	runner := NewRunner(
+		dockerClient(),
+		language,
+		code,
+	)
+	defer runner.cleanup()
+
+	runner.RunnerType = RUNNER_CORRECTION
+	runner.ChallengeFolderPath = challengeFolderPath
+
+	status, err = runner.Run("correction", []string{"code"}, challengeFolderPath, 7000)
+	if err != nil {
+		log.Printf("[E] Error running code: %s\n", err)
+		return
+	}
+
+	if status == STATUS_TIMED_OUT {
+		output = "Execution timed out"
+		err = errors.New(output)
+		return
+	}
+
+	output, err = runner.getLogs()
+
+	failedStatus := map[int]bool{
+		STATUS_EXPLOITABLE:  true,
+		STATUS_CHECK_FAILED: true,
+		STATUS_FAILED:       true,
+	}
+	if failedStatus[status] {
+		err = errors.New(output)
 	}
 
 	return
@@ -136,11 +199,21 @@ func (r *Runner) Run(image string, cmd []string, challengePath string, timeout t
 		return 0, err
 	}
 
-	if challengePath != "" {
-		copyChallengeFiles(r, challengePath)
+	if r.RunnerType == RUNNER_CORRECTION {
+		r.copyCorrectionFiles()
+		if err != nil {
+			return 0, err
+		}
 	}
 
-	cmd = append(cmd, path.Join("/code", srcFile))
+	if r.RunnerType == RUNNER_EXPLOITATION {
+		r.copyExploitationFiles()
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	cmd = append([]string{path.Join("/code", srcFile)}, cmd...)
 
 	log.Println("Creating container")
 	if err := r.createContainer(image, cmd); err != nil {
@@ -189,7 +262,39 @@ func (r *Runner) createSrcFile() (string, error) {
 	return fileName, nil
 }
 
-func copyChallengeFiles(r *Runner, challengeFolderPath string) error {
+func (r *Runner) copyExploitationFiles() error {
+
+	requiredFiles := []string{
+		"secret",
+		"key",
+		"victim_browser.py",
+	}
+
+	for _, fileName := range requiredFiles {
+		src := path.Join(r.ChallengeFolderPath, fileName)
+		if _, err := os.Stat(src); err == nil {
+			dst := path.Join(r.CodeDir, fileName)
+			s, err := os.Open(src)
+			if err != nil {
+				return err
+			}
+			d, err := os.Create(dst)
+			if err != nil {
+				return err
+			}
+			if _, err := io.Copy(d, s); err != nil {
+				s.Close()
+				d.Close()
+				return err
+			}
+			s.Close()
+			d.Close()
+		}
+	}
+	return nil
+}
+
+func (r *Runner) copyCorrectionFiles() error {
 
 	requiredFiles := []string{
 		"init.py",
@@ -199,7 +304,7 @@ func copyChallengeFiles(r *Runner, challengeFolderPath string) error {
 	}
 
 	for _, fileName := range requiredFiles {
-		src := path.Join(challengeFolderPath, fileName)
+		src := path.Join(r.ChallengeFolderPath, fileName)
 		if _, err := os.Stat(src); err == nil {
 			dst := path.Join(r.CodeDir, fileName)
 			s, err := os.Open(src)
@@ -226,13 +331,19 @@ func (r *Runner) createContainer(image string, cmd []string) error {
 
 	writeLimit := []dcli.BlockLimit{
 		dcli.BlockLimit{
-			Path: utils.LocalDiskLabel,
+			Path: config.Conf.LocalDiskLabel,
 			Rate: 3000000,
 		},
 	}
 
+	binds := []string{fmt.Sprintf("%s:/code", r.CodeDir)}
+	if r.RunnerType == RUNNER_EXPLOITATION {
+		dbPath := path.Join("/tmp", r.ChallengeName)
+		binds = append(binds, fmt.Sprintf("%s:/tmp", dbPath))
+	}
+
 	hostConfig := &dcli.HostConfig{
-		Binds:               []string{fmt.Sprintf("%s:/code", r.CodeDir)},
+		Binds:               binds,
 		BlkioDeviceWriteBps: writeLimit,
 		CapAdd:              []string{"NET_ADMIN"},
 		NetworkMode:         "pedagogic_ctf",

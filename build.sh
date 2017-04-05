@@ -16,9 +16,8 @@ spinner()
 }
 
 echo " [*] Installing dependencies"
-sudo apt-get update && sudo apt-get install --fix-missing -y build-essential python3 golang-1.7 perl libauthen-passphrase-perl libmojolicious-perl libdigest-sha-perl libdbi-perl libdbd-sqlite3-perl libhtml-scrubber-perl libhtml-defang-perl libcrypt-cbc-perl libstring-random-perl python3-pip python3-lxml openssl dnsutils libxml2-dev libxslt1-dev npm > /dev/null &
+sudo apt-get update && sudo apt-get install --fix-missing -y build-essential python3 golang-1.7 python3-pip npm > /dev/null &
 spinner $!
-sudo cpan MIK/CryptX-0.044.tar.gz
 echo " [*] Installing Python dependencies"
 virtualenv -p /usr/bin/python3 venv
 source venv/bin/activate

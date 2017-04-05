@@ -17,7 +17,7 @@ if len(sys.argv) != 2 or not sys.argv[1]:
     print("Please send me a directory path so I can launch my configuration script !")
     sys.exit(0)
 directory = sys.argv[1]
-regex_dir = r"/tmp/injection_conf/[a-zA-Z0-9_-]+"
+regex_dir = r"/tmp/[a-zA-Z0-9_-]+"
 regex_dir_compiled = re.compile(regex_dir)
 if not directory or not regex_dir_compiled.search(directory):
     print("Error, directory param not valid.")
@@ -28,7 +28,7 @@ if os.path.isdir(directory):
 ## end check params
 
 ## write configuration file
-configuration_file_name = "/tmp/injection_conf/"
+configuration_file_name = "/tmp/"
 configuration_file_name += ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(30))
 configuration_file_name += "_config.sh"
 with open(configuration_file_name, "w") as fh:

@@ -1,0 +1,7 @@
+{
+    "localDiskLabel": "/dev/vda",
+    "challengeFolder": "challs/",
+    "flagFileName": "secret",
+    "emails": "simon.vasseur@corp.ovh.com",
+    "isProduction" : false
+}

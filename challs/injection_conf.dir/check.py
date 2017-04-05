@@ -32,7 +32,7 @@ def run_cmd(correction_file, args):
 
 def check(correction_file, secret):
 
-    directory = "/tmp/injection_conf/inject_conf_" + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(30))
+    directory = "/tmp/inject_conf_" + ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(30))
     folder_configured_path = os.path.join(directory, "folder_configured")
     out, ret = run_cmd(correction_file, [directory])
     if ret != 0 or not os.path.isdir(directory) or not os.path.isfile(folder_configured_path):
@@ -45,7 +45,7 @@ def check(correction_file, secret):
         print("Output is wrong. The output of your code is : " + out + "\nAnd it should be : \"Error, directory param not valid.\"")
         return False
 
-    directory = "/tmp/injection_conf/&ls"
+    directory = "/tmp/&ls"
     out, ret = run_cmd(correction_file, [directory])
     if ret != 0 or out != "Error, directory param not valid.\n":
         print("Output is wrong. The output of your code is : " + out + "\nAnd it should be : \"Error, directory param not valid.\"")

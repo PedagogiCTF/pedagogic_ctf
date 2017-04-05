@@ -1,7 +1,7 @@
 #!/bin/bash
 
-user=$1
-correction=$2
+correction=$1
+user=$2
 
 files=( "init.py" "check.py" "exploit.py" )
 

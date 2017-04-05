@@ -44,8 +44,8 @@ Then re-run init.sh.
 
 You can tests challenges with (selenium docker need to be started):
 
-`./test.sh`
+`./tests.sh`
 
 and (Go Api need to be started):
 
-`python3 test.py`
+`python3 tests.py`

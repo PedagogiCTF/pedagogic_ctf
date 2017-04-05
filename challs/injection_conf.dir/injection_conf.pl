@@ -14,7 +14,7 @@ if (@ARGV == 0 || !$ARGV[0]) {
 	exit 0;
 }
 my $directory = $ARGV[0];
-if ($directory !~ /\/tmp\/injection_conf\/[a-zA-Z0-9_-]+/){
+if ($directory !~ /\/tmp\/[a-zA-Z0-9_-]+/){
     print "Error, directory param not valid.\n";
     exit 0;
 }
@@ -26,7 +26,7 @@ if (-e $directory){
 
 ## write configuration file
 my @chars = ("A".."Z", "a".."z", "0".."9");
-my $configurationFileName = "/tmp/injection_conf/";
+my $configurationFileName = "/tmp/";
 $configurationFileName .= $chars[rand @chars] for 1..30;
 $configurationFileName .= "_config.sh";
 open(my $fh, '>', $configurationFileName) or die "Could not open file '$configurationFileName' $!";

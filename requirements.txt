@@ -1,9 +1,1 @@
-bcrypt
-bleach
-bs4
-flask
-html5lib
-lxml
-pycrypto
 requests
-rq

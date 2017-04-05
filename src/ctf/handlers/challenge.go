@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+	"ctf/config"
 	"ctf/model"
 	"ctf/utils"
 	"encoding/json"
@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"regexp"
 	"strconv"
 	"time"
@@ -30,48 +29,6 @@ func exists(path string) (bool, error) {
 	return true, err
 }
 
-func customCommand(filename, language, dir string, args ...string) (out string, err error) {
-	// https://medium.com/@vCabbage/go-timeout-commands-with-os-exec-commandcontext-ba0c861ed738#.grao7dugq
-
-	ctx, cancel := context.WithTimeout(context.Background(), 7*time.Second)
-	defer cancel() // The cancel should be deferred so resources are cleaned up
-
-	var interpreter string
-	var extension string
-
-	switch language {
-	case "PYTHON":
-		interpreter = "python3"
-		extension = ".py"
-		args = append([]string{filename + extension}, args...)
-	case "PERL":
-		interpreter = "perl"
-		extension = ".pl"
-		args = append([]string{filename + extension}, args...)
-	case "GOLANG":
-		interpreter = "go"
-		extension = ".go"
-		args = append([]string{filename + extension}, args...)
-		args = append([]string{"run"}, args...)
-	default:
-		return "", errors.New("Invalid language")
-	}
-
-	cmd := exec.CommandContext(ctx, interpreter)
-	cmd.Args = append([]string{interpreter}, args...)
-	cmd.Dir = dir
-
-	var stdErrOut []byte
-	stdErrOut, err = cmd.CombinedOutput()
-
-	if ctx.Err() == context.DeadlineExceeded {
-		out = "Operation timed out\n"
-	} else {
-		out = string(stdErrOut)
-	}
-	return out, err
-}
-
 func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName string,
 	challengeFolderPath string, challenge model.Challenge, err error) {
 	vars := mux.Vars(r)
@@ -85,7 +42,7 @@ func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName st
 		return
 	}
 
-	challengeFolderPath = utils.BasePath + utils.ChallengeFolder + challengeName + ".dir/"
+	challengeFolderPath = config.BasePath + config.Conf.ChallengeFolder + challengeName + ".dir/"
 	exists, err := exists(challengeFolderPath)
 	if !exists || err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -192,11 +149,11 @@ func ChallengeExecute(w http.ResponseWriter, r *http.Request) {
 		args = append([]string{user.Email}, args...)
 	}
 
-	out, err := customCommand(
+	out, err := RunExploitation(
 		challengeName,
 		language,
 		challengeFolderPath,
-		args...,
+		args,
 	)
 
 	if err != nil {
@@ -239,7 +196,7 @@ func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	realSecret, err := ioutil.ReadFile(challengeFolderPath + utils.FlagFileName)
+	realSecret, err := ioutil.ReadFile(challengeFolderPath + config.Conf.FlagFileName)
 	if secret != string(realSecret[:]) {
 		message := "Not the good secret sorry. Be carefull with spaces when copy-pasting."
 		w.WriteHeader(http.StatusNotAcceptable)
@@ -250,7 +207,7 @@ func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 	registeredUser, user, err := IsUserAuthenticated(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		utils.SendResponseJSON(w, utils.Message{"Your session seems expired, please login again"})
+		utils.SendResponseJSON(w, utils.Message{"Your session seems expired, please logout and login again to register your points"})
 		return
 	}
 
@@ -285,14 +242,19 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	out, err := RunCorrection(
+	out, status, err := RunCorrection(
 		challengeFolderPath,
-		challengeName,
 		correction.ContentScript,
 		correction.Language,
 	)
 
 	if err != nil {
+		if status == STATUS_TIMED_OUT {
+			w.WriteHeader(http.StatusInternalServerError)
+			utils.SendResponseJSON(w, utils.Message{out})
+			log.Printf("%v", err)
+			return
+		}
 		w.WriteHeader(http.StatusNotAcceptable)
 		encouragingMessage := fmt.Sprintf("Looks like your script is not perfect yet. Here is your error : \"%s\"", out)
 		utils.SendResponseJSON(w, utils.Message{encouragingMessage})
@@ -303,7 +265,7 @@ func ChallengeCorrect(w http.ResponseWriter, r *http.Request) {
 	registeredUser, user, err := IsUserAuthenticated(w, r)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
-		utils.SendResponseJSON(w, utils.Message{"Your session seems expired, please login again"})
+		utils.SendResponseJSON(w, utils.Message{"Your session seems expired, please logout and login again to register your points"})
 		return
 	}
 
@@ -411,7 +373,7 @@ func ChallengeInterpret(w http.ResponseWriter, r *http.Request) {
 
 func GetChallenges() (challenges model.Challenges, err error) {
 
-	challengesPath := utils.BasePath + "challenges.json"
+	challengesPath := config.BasePath + "challenges.json"
 
 	challengesRaw, err := ioutil.ReadFile(challengesPath)
 	if err != nil {
