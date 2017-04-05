@@ -27,14 +27,16 @@ sudo docker run --name=selenium --network=pedagogic_ctf -p 127.0.0.1:6379:6379 -
 
 for chall_name in `ls challs|grep dir|sed "s/.dir$//"`
 do
-    sudo userdel $chall_name
-    sudo useradd $chall_name
+    if [ -d "/tmp/$chall_name" ]; then
+        rm -Rf /tmp/$chall_name
+    fi
     rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     echo " [*] Initialize $chall_name challenge"
-    python3 challs/${chall_name}.dir/init.py "" $rand $USER
-    echo -n $rand > challs/${chall_name}.dir/secret
-    if [ "$chall_name" == "data_exposure" ]; then
-        rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
-        echo -n $rand > challs/${chall_name}.dir/key
+    cd challs/${chall_name}.dir/
+    python3 init.py "" $rand $USER
+    mkdir /tmp/$chall_name
+    if [ -f "/tmp/${chall_name}.db" ]; then
+        mv /tmp/${chall_name}.db /tmp/$chall_name/${chall_name}.db
     fi
+    cd ../../
 done

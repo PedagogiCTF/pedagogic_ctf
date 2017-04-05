@@ -1,0 +1,10 @@
+bcrypt
+bleach
+bs4
+flask
+html5lib
+lxml
+pycrypto
+redis
+requests
+rq

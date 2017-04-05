@@ -44,7 +44,7 @@ func main() {
 		os.Exit(0)
 	}
 	directory := args[0]
-	regexDirectoryCompiled := regexp.MustCompile(`/tmp/injection_conf/[a-zA-Z0-9_-]+`)
+	regexDirectoryCompiled := regexp.MustCompile(`/tmp/[a-zA-Z0-9_-]+`)
 	if !regexDirectoryCompiled.MatchString(directory) {
 		fmt.Println("Error, directory param not valid.")
 		os.Exit(0)
@@ -56,7 +56,7 @@ func main() {
 	// end check params
 
 	// write configuration file
-	configurationFileName := "/tmp/injection_conf/"
+	configurationFileName := "/tmp/"
 	configurationFileName += randString(30)
 	configurationFileName += "_config.sh"
 	f, _ := os.Create(configurationFileName)
