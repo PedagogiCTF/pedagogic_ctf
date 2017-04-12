@@ -10,7 +10,7 @@
         </ul>
     </nav>
 
-    <section class="col-xs-10">
+    <section id="challenge" class="col-xs-10">
         <ul class="languages">
             <li ng-repeat="language in challenge.languages" role="presentation" class="language">
                 <a class="btn btn-block btn-raised" ng-class="{'btn-info': isLanguageSelected(language)}"
@@ -31,9 +31,6 @@
                         autofocus><i class="material-icons">bug_report</i>Exploit</button>
                     <button type="button" class="btn btn-raised btn-primary" ng-click="selectChallengeMode('correct')">
                         <i class="material-icons">build</i>Patch
-                    </button>
-                    <button type="button" class="btn btn-raised btn-primary" ng-click="selectChallengeMode('interpret')">
-                        <i class="material-icons">play_arrow</i>Playground
                     </button>
                     <div ng-show="challengeMode === 'execute'" class="ng-cloak">
                         <pre style="padding:0;border:0;">
@@ -98,33 +95,13 @@
             			    {{ correctButtonText }}
                         </button>
                     </div>
-                    <div ng-show="challengeMode === 'interpret'" class="ng-cloak" style="padding-top: 18px">
-                        <!-- ng-show -->
-                        <div ng-model="requestInterpret[challenge.challenge_id][language.extension].content_script"
-                            ui-ace="{
-                                require: ['ace/ext/language_tools'],
-					            onLoad: aceLoaded[challenge.challenge_id][language.extension],
-					            mode: language.name.toLowerCase(),
-                                theme:'monokai',
-                                advanced: {
-                                    enableSnippets: true,
-                                    enableBasicAutocompletion: true,
-                                    enableLiveAutocompletion: true
-                                }
-				            }" style="height:350px;">
-                        </div>
-                        <button class="btn btn-raised btn-info" ng-click="interpret(challenge.challenge_id, language.extension, language.name)">
-				            <span ng-show="interpretButtonText == 'Processing'">
-					        <i class="material-icons spinning">autorenew</i>
-				            </span>
-            			    {{ interpretButtonText }}
-                        </button>
-                        <h3>Output :</h3>
-                        <pre class="result">{{ interpretOutput }}</pre>
-                    </div>
                 </div>
             </div>
             <!-- End chall -->
         </div>
     </section>
+    <button type="button" class="btn btn-fab btn-raised btn-info" ng-click="showPlayground()" style="position: fixed; bottom: 20px; right: 20px;">
+        <i class="material-icons">play_arrow</i>
+    </button>
+    <div ng-show="playgroundShow" playground-popup></div>
 </div>

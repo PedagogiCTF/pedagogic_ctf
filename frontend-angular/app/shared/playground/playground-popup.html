@@ -1,0 +1,49 @@
+<div data-ng-controller="PlaygroundCtrl as PlaygroundCtrl">
+    <div ng-draggable="dragOptions" class="draggable playground-popup" data-ng-class="{
+        'minimize' : status.minimize,
+        'maximize' : status.maximize,
+        'close'    : status.close
+    }">
+        <div class="draggable-header" id="headerPopup">
+            <div class="playground_popup_tools pull-right">
+                <button type="button" data-ng-click="minimize()">
+                <span class="glyphicon glyphicon-minus-sign"></span>
+            </button>
+                <button type="button" data-ng-click="toggle()">
+                <span class="glyphicon glyphicon-plus-sign"></span>
+            </button>
+                <button type="button" data-ng-click="close()">
+                <span class="glyphicon glyphicon-remove-sign"></span>
+            </button>
+            </div>
+        </div>
+
+        <div id="contentPopup">
+            <ul class="nav nav-tabs">
+                <li ng-repeat="language in languages">
+                    <a style="cursor: pointer;" ng-click="selectLanguage(language)">{{ language }}</a>
+                </li>
+            </ul>
+            <div ng-repeat="language in languages">
+                <div id="ace" ng-show="isLanguageSelected(language)" ng-model="snippets[language]" ui-ace="{
+                                require: ['ace/ext/language_tools'],
+					            mode: language.toLowerCase(),
+                                theme:'monokai',
+                                advanced: {
+                                    enableSnippets: true,
+                                    enableBasicAutocompletion: true,
+                                    enableLiveAutocompletion: true
+                                }
+				            }" style="height:350px;">
+                </div>
+            </div>
+            <button class="btn btn-raised btn-info" ng-click="interpret()">
+			<span ng-show="interpretButtonText == 'Processing'">
+			    <i class="material-icons spinning">autorenew</i>
+			</span>
+            {{ interpretButtonText }}
+        </button>
+            <pre id="output" class="result">{{ interpretOutput }}</pre>
+        </div>
+    </div>
+</div>

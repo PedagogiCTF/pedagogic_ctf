@@ -18,9 +18,12 @@
     "highlightjs": ">=9.6.0",
     "bootstrap-material-design": "0.5.10",
     "angular-ui-ace": ">=0.2.3",
-    "angular-modal-service": ">=0.11.0"
+    "angular-modal-service": ">=0.11.0",
+    "jquery-ui": ">=1.6",
+    "snackbarjs": ">=1.1"
   },
   "resolutions": {
-      "angular"  : ">=1.6.0"
+    "angular": ">=1.6.0",
+    "jquery": "^2.2"
   }
 }
