@@ -27,9 +27,9 @@ angular.module('myApp').factory("Challenges", function($resource, URLS) {
                 method: "POST",
                 url: [URLS.API, "challenge/:id/correct"].join("/"),
             },
-            interpret: {
+            playground: {
                 method: "POST",
-                url: [URLS.API, "challenge/:id/interpret"].join("/"),
+                url: [URLS.API, "playground"].join("/"),
             },
         });
 });

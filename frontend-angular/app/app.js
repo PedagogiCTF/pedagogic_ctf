@@ -4,6 +4,7 @@
 angular.module('myApp', [
     'ngResource',
     'ngRoute',
+    'ngAnimate',
     'angularModalService',
     'ui.ace',
     'myApp.style',

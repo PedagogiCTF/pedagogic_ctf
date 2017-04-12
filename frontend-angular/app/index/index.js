@@ -9,7 +9,19 @@ angular.module('myApp')
     });
 }])
 
-.controller('IndexCtrl', function($cookies, $sce, $scope, $http, $location, $anchorScroll, ModalService, Users, Challenges) {
+.directive('ngDraggable', function($document) {
+    return {
+        restrict: 'A',
+        scope: {
+            dragOptions: '=ngDraggable'
+        },
+        link: function(scope, elem, attr) {
+            $(elem).draggable(scope.dragOptions);
+        }
+    }
+})
+
+.controller('IndexCtrl', function($rootScope, $cookies, $sce, $scope, $http, $location, $anchorScroll, ModalService, PlaygroundService, Users, Challenges) {
 
     $scope.init = function() {
 
@@ -22,22 +34,20 @@ angular.module('myApp')
             }
         });
 
+        $scope.playgroundShow = false;
         $scope.executeButtonText = "Execute";
         $scope.correctButtonText = "Try to exploit my patched code";
-        $scope.interpretButtonText = "Run";
 
         $scope.isShownHash = {};
         $scope.requestExecute = {};
         $scope.requestValidate = {};
         $scope.challengeResults = {};
         $scope.requestCorrect = {};
-        $scope.requestInterpret = {};
         $scope.validatedChallenges = [];
         $scope.challenge = {};
         $scope.language = {};
         $scope.user = $cookies.getObject('user') || {};
         $scope.challengeMode = "execute";
-        $scope.interpretOutput = "";
 
         $scope.getAllChallenges();
         $scope.getUserValidatedChallenges();
@@ -62,9 +72,6 @@ angular.module('myApp')
                     var language = challenge.languages[i];
                     $scope.requestCorrect[challengeId][language.extension] = {
                         "content_script": language.file_content
-                    };
-                    $scope.requestInterpret[challengeId][language.extension] = {
-                        "content_script": getInterpreterShibang(language.extension)
                     };
                     $scope.aceLoaded[challengeId][language.extension] = (function(challId, ext) {
                         return function(_editor) {
@@ -92,7 +99,7 @@ angular.module('myApp')
 
         var previousButtonText = $scope.executeButtonText;
         $scope.executeButtonText = "Processing";
-       
+
         $scope.requestExecute[challengeId].language = language;
 
         Challenges.execute({
@@ -168,32 +175,6 @@ angular.module('myApp')
         });
     };
 
-    $scope.interpret = function(challengeId, extension, language) {
-
-        $http.defaults.headers.common['X-CTF-AUTH'] = $scope.user.token;
-        var title = "";
-        var message = "";
-        var previousButtonText = $scope.interpretButtonText;
-        $scope.interpretButtonText = "Processing";
-
-        $scope.requestInterpret[challengeId][extension].language = language;
-        Challenges.interpret({
-            id: challengeId
-        }, $scope.requestInterpret[challengeId][extension]).$promise.then(
-            function(response) {
-                var output = response;
-                $scope.interpretOutput = output.message;
-                $scope.interpretButtonText = previousButtonText;
-            },
-            function(err) {
-                title = "Execution error";
-                message = err.data.message;
-                $scope.executeButtonText = previousButtonText;
-                showModal(title, message);
-            }
-        );
-    };
-
     $scope.reset = function(challengeId) {
         $scope.requestExecute = {};
         $scope.requestValidate = {};
@@ -231,7 +212,6 @@ angular.module('myApp')
                 for (var i = 0; i < $scope.challenges.length; ++i) {
                     $scope.requestExecute[$scope.challenges[i].challenge_id] = {};
                     $scope.requestCorrect[$scope.challenges[i].challenge_id] = {};
-                    $scope.requestInterpret[$scope.challenges[i].challenge_id] = {};
                 }
                 $scope.showChallenge($scope.challenges[0].challenge_id, 0);
                 $(".search-details-form").hide();
@@ -268,22 +248,9 @@ angular.module('myApp')
         );
     };
 
-    function getInterpreterShibang(extension) {
-        var shibang = "";
-        switch (extension) {
-            case ".py":
-                shibang = "#!/usr/bin/python3\n\n";
-                break;
-            case ".pl":
-                shibang = "#!/usr/bin/env perl\n\n";
-                break;
-            case ".go":
-                shibang = "package main\n\n";
-                break;
-            default:
-                shibang = "";
-        };
-        return shibang
+    $scope.showPlayground = function() {
+        $scope.playgroundShow = !$scope.playgroundShow;
+        $rootScope.$broadcast('playground.popup.restore');
     };
 
     function showModal(title, message) {

@@ -53,8 +53,8 @@ var routes = model.Routes{
 	model.Route{
 		"RunSnippet",
 		"POST",
-		"/v1.0/challenge/{challengeName}/interpret",
-		handlers.ChallengeInterpret,
+		"/v1.0/playground",
+		handlers.PlaygroundExecute,
 	},
 	model.Route{
 		"UserAuthenticate",
