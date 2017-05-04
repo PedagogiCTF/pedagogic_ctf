@@ -1,0 +1,22 @@
+{
+	"name": "SQL Injection",
+	"points": 100,
+	"description": "Please sign in to access content. Registrations are closed for the moment",
+	"parameters": [
+		{
+			"name": "username",
+			"placeholder": "ex: marius"
+		},
+		{
+			"name": "password",
+			"placeholder": "ex: toto123"
+		}
+	],
+	"languages": [
+		{
+			"name": "PYTHON", 
+			"extension": ".py"
+		}
+	],
+	"resolved_conclusion":"\n\nUse an interface that supports bind variables (e.g., prepared statements or stored procedures). Encode all user input before passing it to the interpreter"
+}

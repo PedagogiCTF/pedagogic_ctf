@@ -4,8 +4,6 @@ extensions=( ".py" ".pl" ".go" )
 
 for chall_name in `ls |grep dir|sed "s/.dir$//"`
 do
-    sudo userdel $chall_name 
-    sudo useradd $chall_name
     rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     echo " [*] Testing $chall_name challenge"
     
