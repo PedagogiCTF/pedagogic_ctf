@@ -33,7 +33,7 @@ def check(correction_file, secret):
     checks = [
         {
             'params': ['a', 'a'],
-            'response': 'unauthorized',
+            'response': 'invalid username/password',
             'message': 'Login seems broken. Your code output \n\n{}',
         },
         {
