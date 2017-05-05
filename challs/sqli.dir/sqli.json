@@ -16,6 +16,10 @@
 		{
 			"name": "PYTHON", 
 			"extension": ".py"
+		},
+		{
+			"name": "PERL", 
+			"extension": ".pl"
 		}
 	],
 	"resolved_conclusion":"\n\nUse an interface that supports bind variables (e.g., prepared statements or stored procedures). Encode all user input before passing it to the interpreter"
