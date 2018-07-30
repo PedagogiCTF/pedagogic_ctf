@@ -16,8 +16,7 @@ def init_secrets(secret):
 
 
 def main():
-
-    secret = sys.argv[2]
+    secret = sys.argv[1]
     init_secrets(secret)
 
 

@@ -12,13 +12,14 @@ type Configuration struct {
 	LocalDiskLabel  string
 	ChallengeFolder string
 	FlagFileName    string
-	Emails          string
 	IsProduction    bool
+	BasePath        string
+	ListenOn        string
+	DataSourceName  string
 }
 
-func InitConfig() {
-
-	file, err := os.Open(BasePath + "src/ctf/config/config.json")
+func InitConfig(configPath string) {
+	file, err := os.Open(configPath)
 	if err != nil {
 		log.Println(err)
 	}
@@ -27,5 +28,3 @@ func InitConfig() {
 		panic(err)
 	}
 }
-
-const BasePath = "/home/admin/dev/pedagogic_ctf/"

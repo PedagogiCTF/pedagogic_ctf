@@ -20,7 +20,7 @@ COPY worker.py /home/selenium/
 COPY browser.py /home/selenium/
 RUN chown -R selenium:selenium /home/selenium/
 ADD entrypoint.sh entrypoint.sh
-RUN sed -i -e"s/^bind\s*127.0.0.1/bind 0.0.0.0/" /etc/redis/redis.conf
+RUN sed -i -e"s/^bind\s*127.0.0.1.*/bind 0.0.0.0/" /etc/redis/redis.conf
 
 EXPOSE 6379
 EXPOSE 8888

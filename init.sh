@@ -7,7 +7,7 @@ if sudo docker ps -a | grep selenium >/dev/null ; then
 fi
 
 echo " [*] Starting Selenium Docker"
-sudo docker run --name=selenium --network=pedagogic_ctf -p 127.0.0.1:6379:6379 -p 127.0.0.1:8888:8888 -d -t selenium >/dev/null
+sudo docker run --name=selenium --network=pedagogic_ctf -p 127.0.0.1:6379:6379 -p 127.0.0.1:8888:8888 -d --restart=unless-stopped -t selenium
 
 for chall_name in `ls challs|grep dir|sed "s/.dir$//"`
 do
@@ -17,7 +17,7 @@ do
     rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     echo " [*] Initialize $chall_name challenge"
     cd challs/${chall_name}.dir/
-    python3 init.py "" $rand $USER
+    python3 init.py $rand $USER
     mkdir /tmp/$chall_name
     if [ -f "/tmp/${chall_name}.db" ]; then
         mv /tmp/${chall_name}.db /tmp/$chall_name/${chall_name}.db

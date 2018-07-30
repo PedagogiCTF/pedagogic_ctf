@@ -42,7 +42,7 @@ func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName st
 		return
 	}
 
-	challengeFolderPath = config.BasePath + config.Conf.ChallengeFolder + challengeName + ".dir/"
+	challengeFolderPath = config.Conf.BasePath + config.Conf.ChallengeFolder + challengeName + ".dir/"
 	exists, err := exists(challengeFolderPath)
 	if !exists || err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -347,7 +347,7 @@ func updateValidatedChallenge(exploited bool, challengeName string, challenge mo
 
 func GetChallenges() (challenges model.Challenges, err error) {
 
-	challengesPath := config.BasePath + "challenges.json"
+	challengesPath := config.Conf.BasePath + "challenges.json"
 
 	challengesRaw, err := ioutil.ReadFile(challengesPath)
 	if err != nil {

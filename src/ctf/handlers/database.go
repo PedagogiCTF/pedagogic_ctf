@@ -21,9 +21,7 @@ func InitDB(dbType, dataSourceName string) {
 }
 
 func Migrate() (err error) {
-
-	isProd := config.Conf.IsProduction
-	if !isProd {
+	if !config.Conf.IsProduction {
 		db.DropTableIfExists(&model.User{})
 		db.DropTableIfExists(&model.Challenge{})
 		db.DropTableIfExists(&model.ValidatedChallenge{})

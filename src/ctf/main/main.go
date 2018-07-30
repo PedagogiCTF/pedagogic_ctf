@@ -6,21 +6,19 @@ import (
 	"ctf/router"
 	"log"
 	"net/http"
+	"flag"
 )
 
 func main() {
+	cfgFlg := flag.String("config", "config.json", "The path to the configuration file")
+	flag.Parse()
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	config.InitConfig()
-	router := router.NewRouter()
+	config.InitConfig(*cfgFlg)
 
-	handlers.InitDB("sqlite3", "database.db")
+	handlers.InitDB("postgres", config.Conf.DataSourceName)
 	handlers.Migrate()
 
-	if config.Conf.IsProduction {
-		log.Fatal(http.ListenAndServe("127.0.0.1:8080", router))
-	} else {
-		log.Fatal(http.ListenAndServe("0.0.0.0:8080", router))
-	}
+	log.Fatal(http.ListenAndServe(config.Conf.ListenOn, router.NewRouter()))
 }

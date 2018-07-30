@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import os
+import subprocess
 import sqlite3
 import sys
 
@@ -17,7 +18,6 @@ def generate_user_token():
 
 
 def init_db(db_user):
-
     db = os.path.join(os.path.sep, "tmp", "misconfiguration.db")
 
     conn = sqlite3.connect(db)
@@ -40,20 +40,18 @@ def init_db(db_user):
     conn.commit()
     conn.close()
 
-    os.system('chown {}:{} {}'.format(db_user, db_user, db))
-    os.system('chmod 640 ' + db)
+    subprocess.call(["chown", "--", "{}:{}".format(user, user), db])
+    subprocess.call(["chmod", "--", "640", db])
 
 
 def init_secret(secret):
-
     with open('secret', "w") as _file:
         _file.write(secret)
 
 
 def main():
-
-    secret = sys.argv[2]
-    user = sys.argv[3]
+    secret = sys.argv[1]
+    user = sys.argv[2]
     init_db(user)
     init_secret(secret)
 
