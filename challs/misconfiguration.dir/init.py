@@ -17,8 +17,9 @@ def generate_user_token():
     return sha1(b64encode(bytes(randrange(1, 99999)))).hexdigest()
 
 
-def init_db(db_user):
-    db = os.path.join(os.path.sep, "tmp", "misconfiguration.db")
+def init_db(chown_user):
+    os.system("rm -rf /tmp/misconfiguration && mkdir /tmp/misconfiguration")
+    db = "/tmp/misconfiguration/misconfiguration.db"
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
@@ -40,7 +41,7 @@ def init_db(db_user):
     conn.commit()
     conn.close()
 
-    subprocess.call(["chown", "--", "{}:{}".format(user, user), db])
+    subprocess.call(["chown", "--", "{}:{}".format(chown_user, chown_user), db])
     subprocess.call(["chmod", "--", "640", db])
 
 

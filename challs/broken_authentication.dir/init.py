@@ -7,7 +7,8 @@ import sys
 
 
 def init_db(user):
-    db = os.path.join(os.path.sep, "tmp", "broken_authentication.db")
+    os.system("rm -rf /tmp/broken_authentication && mkdir /tmp/broken_authentication")
+    db = "/tmp/broken_authentication/broken_authentication.db"
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()

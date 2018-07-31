@@ -1,8 +1,7 @@
 package handlers
 
 import (
-	"ctf/config"
-	"ctf/model"
+		"ctf/model"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/sqlite"
@@ -21,12 +20,6 @@ func InitDB(dbType, dataSourceName string) {
 }
 
 func Migrate() (err error) {
-	if !config.Conf.IsProduction {
-		db.DropTableIfExists(&model.User{})
-		db.DropTableIfExists(&model.Challenge{})
-		db.DropTableIfExists(&model.ValidatedChallenge{})
-	}
-
 	db.AutoMigrate(&model.User{}, &model.Challenge{}, &model.ValidatedChallenge{})
 
 	return

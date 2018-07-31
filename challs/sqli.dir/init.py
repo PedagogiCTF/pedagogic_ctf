@@ -9,7 +9,8 @@ from hashlib import sha256
 
 
 def init_db(user, secret):
-    db = os.path.join(os.path.sep, "tmp", "sqli.db")
+    os.system("rm -rf /tmp/sqli && mkdir /tmp/sqli")
+    db = "/tmp/sqli/sqli.db"
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()

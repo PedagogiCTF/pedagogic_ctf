@@ -1,0 +1,15 @@
+FROM nginx:1.15.2
+
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/hackme.conf
+
+RUN mkdir -p /srv/app/
+WORKDIR /srv/app/
+COPY frontend-angular/app .
+
+EXPOSE 80
+EXPOSE 443
+
+VOLUME /var/lib/postgresql/data
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -4,7 +4,6 @@ import sys
 
 
 def init_secret(secret):
-
     with open('secret', "w") as _file:
         _file.write(secret)
 

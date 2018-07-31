@@ -1,9 +1,0 @@
-{
-    "localDiskLabel": "/dev/sda",
-    "challengeFolder": "challs/",
-    "flagFileName": "secret",
-    "isProduction" : false,
-    "basePath": "/home/user/pedagogic_ctf/",
-    "listenOn" : "127.0.0.1:8080",
-    "dataSourceName": "host=localhost user=the_user dbname=pedagogic_ctf sslmode=disable password=xxx"
-}

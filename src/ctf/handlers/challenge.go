@@ -1,8 +1,7 @@
 package handlers
 
 import (
-	"ctf/config"
-	"ctf/model"
+		"ctf/model"
 	"ctf/utils"
 	"encoding/json"
 	"errors"
@@ -42,7 +41,7 @@ func getChallengeInfos(w http.ResponseWriter, r *http.Request) (challengeName st
 		return
 	}
 
-	challengeFolderPath = config.Conf.BasePath + config.Conf.ChallengeFolder + challengeName + ".dir/"
+	challengeFolderPath = "/srv/ctf/challs/" + challengeName + ".dir/"
 	exists, err := exists(challengeFolderPath)
 	if !exists || err != nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -196,7 +195,7 @@ func ChallengeValidate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
-	realSecret, err := ioutil.ReadFile(challengeFolderPath + config.Conf.FlagFileName)
+	realSecret, err := ioutil.ReadFile(challengeFolderPath + "secret")
 	if secret != string(realSecret[:]) {
 		message := "Not the good secret sorry. Be carefull with spaces when copy-pasting."
 		w.WriteHeader(http.StatusNotAcceptable)
@@ -347,7 +346,7 @@ func updateValidatedChallenge(exploited bool, challengeName string, challenge mo
 
 func GetChallenges() (challenges model.Challenges, err error) {
 
-	challengesPath := config.Conf.BasePath + "challenges.json"
+	challengesPath := "/srv/ctf/challenges.json"
 
 	challengesRaw, err := ioutil.ReadFile(challengesPath)
 	if err != nil {

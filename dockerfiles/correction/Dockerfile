@@ -1,4 +1,4 @@
-FROM debian:testing
+FROM debian:stretch
 
 RUN apt-get update -y && apt-get install --fix-missing -y \
     sudo \
@@ -24,6 +24,6 @@ COPY requirements.txt /
 RUN pip3 install -r /requirements.txt
 
 RUN groupadd code && useradd -g code -d "/home/code" -m code
-ADD entrypoint.sh entrypoint.sh
+COPY entrypoint.sh .
 
 ENTRYPOINT ["/bin/bash", "entrypoint.sh"]

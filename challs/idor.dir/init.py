@@ -7,8 +7,8 @@ import sys
 
 
 def init_db(user, secret):
-
-    db = os.path.join(os.path.sep, "tmp", "idor.db")
+    os.system("rm -rf /tmp/idor && mkdir /tmp/idor")
+    db = "/tmp/idor/idor.db"
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
@@ -35,7 +35,6 @@ def init_db(user, secret):
 
 
 def init_secret(secret):
-
     with open('secret', "w") as _file:
         _file.write(secret)
 
