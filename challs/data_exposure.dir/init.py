@@ -7,7 +7,6 @@ from string import ascii_lowercase
 
 
 def init_secrets(secret):
-
     with open('secret', "w") as _file:
         _file.write(secret)
 

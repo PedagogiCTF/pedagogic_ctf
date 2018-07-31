@@ -7,7 +7,8 @@ import sys
 
 
 def init_db(user):
-    db = os.path.join(os.path.sep, "tmp", "stored_xss.db")
+    os.system("rm -rf /tmp/stored_xss && mkdir /tmp/stored_xss")
+    db = "/tmp/stored_xss/stored_xss.db"
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()

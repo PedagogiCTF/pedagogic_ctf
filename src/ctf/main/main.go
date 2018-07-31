@@ -4,21 +4,21 @@ import (
 	"ctf/config"
 	"ctf/handlers"
 	"ctf/router"
+	"fmt"
 	"log"
 	"net/http"
-	"flag"
 )
 
 func main() {
-	cfgFlg := flag.String("config", "config.json", "The path to the configuration file")
-	flag.Parse()
-
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 
-	config.InitConfig(*cfgFlg)
+	config.InitConfig()
 
-	handlers.InitDB("postgres", config.Conf.DataSourceName)
+	handlers.InitDB(
+		"postgres",
+		fmt.Sprintf("host=%s user=%s dbname=pedagogic_ctf sslmode=disable password=%s",
+			config.Conf.DBHost, config.Conf.DBUser, config.Conf.DBPass))
 	handlers.Migrate()
 
-	log.Fatal(http.ListenAndServe(config.Conf.ListenOn, router.NewRouter()))
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", router.NewRouter()))
 }

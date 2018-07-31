@@ -1,30 +1,42 @@
 package config
 
-import (
-	"encoding/json"
-	"log"
-	"os"
-)
+import "os"
 
 var Conf *Configuration
 
 type Configuration struct {
-	LocalDiskLabel  string
-	ChallengeFolder string
-	FlagFileName    string
-	IsProduction    bool
-	BasePath        string
-	ListenOn        string
-	DataSourceName  string
+	LocalDiskLabel string
+
+	DBHost string
+	DBUser string
+	DBPass string
 }
 
-func InitConfig(configPath string) {
-	file, err := os.Open(configPath)
-	if err != nil {
-		log.Println(err)
+func InitConfig() {
+	localDiskLabel, ok := os.LookupEnv("LOCAL_DISK_LABEL")
+	if !ok {
+		localDiskLabel = "/dev/sda"
 	}
-	decoder := json.NewDecoder(file)
-	if err = decoder.Decode(&Conf); err != nil {
-		panic(err)
+
+	dbHost, ok := os.LookupEnv("DB_HOST")
+	if !ok {
+		dbHost = "localhost"
+	}
+
+	dbUser, ok := os.LookupEnv("DB_USER")
+	if !ok {
+		dbUser = "root"
+	}
+
+	dbPass, ok := os.LookupEnv("DB_PASS")
+	if !ok {
+		dbPass = ""
+	}
+
+	Conf = &Configuration{
+		LocalDiskLabel: localDiskLabel,
+		DBHost:         dbHost,
+		DBUser:         dbUser,
+		DBPass:         dbPass,
 	}
 }

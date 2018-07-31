@@ -1,4 +1,4 @@
-FROM debian:testing
+FROM debian:stretch
 
 RUN apt-get update -y && apt-get install --fix-missing -y \
     sudo \
@@ -21,7 +21,7 @@ RUN cpan CryptX
 COPY requirements.txt /
 RUN pip3 install -r /requirements.txt
 RUN groupadd code && useradd -g code -d "/home/code" -m code
-ADD entrypoint.sh entrypoint.sh
-ADD run-code.sh run-code.sh
+COPY entrypoint.sh .
+COPY run-code.sh .
 
 ENTRYPOINT ["/bin/bash", "entrypoint.sh"]

@@ -12,7 +12,7 @@ import (
 	"os"
 	"path"
 	"time"
-)
+	)
 
 type Runner struct {
 	RunnerType          string
@@ -49,7 +49,7 @@ func RunSnippet(code, language string) (output string, err error) {
 	runner.RunnerType = RUNNER_SNIPPET
 
 	var status int
-	status, err = runner.Run("sandbox", []string{}, "", 3000)
+	status, err = runner.Run("sandbox", []string{}, 3000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return
@@ -90,7 +90,7 @@ func RunExploitation(challengeName, language, challengeFolderPath string, args [
 	runner.ChallengeName = challengeName
 
 	var status int
-	status, err = runner.Run("exploitation", args, "", 10000)
+	status, err = runner.Run("exploitation", args, 10000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return
@@ -127,7 +127,7 @@ func RunCorrection(challengeFolderPath, code, language string) (output string, s
 	runner.RunnerType = RUNNER_CORRECTION
 	runner.ChallengeFolderPath = challengeFolderPath
 
-	status, err = runner.Run("correction", []string{"code"}, challengeFolderPath, 7000)
+	status, err = runner.Run("correction", []string{"code"}, 7000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return
@@ -187,7 +187,7 @@ func NewRunner(client *dcli.Client, lang string, code string) *Runner {
 	return &Runner{Language: lang, Code: code, client: client}
 }
 
-func (r *Runner) Run(image string, cmd []string, challengePath string, timeout time.Duration) (int, error) {
+func (r *Runner) Run(image string, cmd []string, timeout time.Duration) (int, error) {
 	log.Println("Creating code directory")
 	if err := r.createCodeDir(); err != nil {
 		return 0, err
@@ -263,7 +263,6 @@ func (r *Runner) createSrcFile() (string, error) {
 }
 
 func (r *Runner) copyExploitationFiles() error {
-
 	requiredFiles := []string{
 		"secret",
 		"key",
@@ -295,7 +294,6 @@ func (r *Runner) copyExploitationFiles() error {
 }
 
 func (r *Runner) copyCorrectionFiles() error {
-
 	requiredFiles := []string{
 		"init.py",
 		"check.py",
@@ -330,22 +328,25 @@ func (r *Runner) copyCorrectionFiles() error {
 func (r *Runner) createContainer(image string, cmd []string) error {
 
 	writeLimit := []dcli.BlockLimit{
-		dcli.BlockLimit{
+		{
 			Path: config.Conf.LocalDiskLabel,
 			Rate: 3000000,
 		},
 	}
 
-	binds := []string{fmt.Sprintf("%s:/code", r.CodeDir)}
+	// The files are written in /tmp in the docker container,
+	// but /tmp is mounted to /tmp/guest on the host
+	hostPath := fmt.Sprintf("/tmp/guest/%s", path.Base(r.CodeDir))
+	binds := []string{fmt.Sprintf("%s:/code", hostPath)}
 	if r.RunnerType == RUNNER_EXPLOITATION {
-		dbPath := path.Join("/tmp", r.ChallengeName)
-		binds = append(binds, fmt.Sprintf("%s:/tmp", dbPath))
+		// Mounting /tmp/guest/chall_name/chall_name.db to /tmp/chall_name.db
+		dbPath := path.Join("/tmp/guest", r.ChallengeName)
+		binds = append(binds, fmt.Sprintf("%s/%s.db:/tmp/%s.db", dbPath, r.ChallengeName, r.ChallengeName))
 	}
 
 	hostConfig := &dcli.HostConfig{
 		Binds:               binds,
 		BlkioDeviceWriteBps: writeLimit,
-		CapAdd:              []string{"NET_ADMIN"},
 		NetworkMode:         "pedagogic_ctf",
 		ReadonlyRootfs:      false,
 	}

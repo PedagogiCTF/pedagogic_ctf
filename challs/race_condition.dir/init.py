@@ -9,7 +9,8 @@ import bcrypt
 
 
 def init_db(user, secret):
-    db = os.path.join(os.path.sep, "tmp", "race_condition.db")
+    os.system("rm -rf /tmp/race_condition && mkdir /tmp/race_condition")
+    db = "/tmp/race_condition/race_condition.db"
 
     conn = sqlite3.connect(db)
     cur = conn.cursor()
@@ -17,9 +18,9 @@ def init_db(user, secret):
     cur.execute("DROP TABLE IF EXISTS forbidden_ids")
     conn.commit()
     cur.execute("""CREATE TABLE users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		login TEXT NOT NULL UNIQUE,
-		password TEXT NOT NULL)""")
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        login TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL)""")
 
     cur.execute("""CREATE TABLE forbidden_ids (user_id INTEGER NOT NULL UNIQUE)""")
     conn.commit()
