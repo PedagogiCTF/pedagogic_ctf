@@ -1,12 +1,10 @@
 #!/usr/bin/python3
-
 import os
 import subprocess
 import sqlite3
-import sys
 
 
-def init_db(user):
+def init_db():
     os.system("rm -rf /tmp/stored_xss && mkdir /tmp/stored_xss")
     db = "/tmp/stored_xss/stored_xss.db"
 
@@ -27,20 +25,12 @@ def init_db(user):
     conn.commit()
     conn.close()
 
-    subprocess.call(["chown", "--", "{}:{}".format(user, user), db])
+    subprocess.call(["chown", "--", "1000:1000", db])
     subprocess.call(["chmod", "--", "640", db])
 
 
-def init_secret(secret):
-    with open('secret', "w") as _file:
-        _file.write(secret)
-
-
 def main():
-    secret = sys.argv[1]
-    user = sys.argv[2]
-    init_db(user)
-    init_secret(secret)
+    init_db()
 
 
 if __name__ == "__main__":

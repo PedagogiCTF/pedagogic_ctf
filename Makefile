@@ -26,7 +26,7 @@ api: challenges.json go docker-util-images
 	docker build -t pedagogictf-api -f Dockerfile.api .
 
 frontend: node
-	docker volume ls | grep frontend-ssl || (docker volume create frontend-ssl && echo "Add your ssl certificates to the docker volume! See ssl.sh")
+	docker volume ls | grep frontend-ssl || (docker volume create frontend-ssl && echo -e "\n\e[41mAdd your ssl certificates to the docker volume! See ssl.sh\e[49m\n")
 	docker build -t pedagogictf-frontend -f Dockerfile.front .
 
 trusted-network:
@@ -53,7 +53,7 @@ launch-db: trusted-network
 	docker exec db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE pedagogic_ctf TO ctf"
 
 api-run: frontend api trusted-network launch-db
-	rm -rf /tmp/guest && mkdir /tmp/guest && chmod -R 750 /tmp/guest
+	sudo rm -rf /tmp/guest && mkdir /tmp/guest && chmod -R 750 /tmp/guest
 	docker run -d --restart=unless-stopped \
 		--network=trusted \
 		--name=api \

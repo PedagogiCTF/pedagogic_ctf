@@ -20,7 +20,8 @@ do
     rand=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 32 | head -n 1)
     echo " [*] Initialize ${chall_name} challenge"
     cd challs/${chall_name}.dir/
-    python3 init.py ${rand} "root"
+    echo -n ${rand} > secret
+    python3 init.py ${rand}
     cd -
 done
 

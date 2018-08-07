@@ -1,9 +1,7 @@
 #!/usr/bin/python3
-
 import os
 import subprocess
 import sqlite3
-import sys
 
 from base64 import b64encode
 from random import randrange
@@ -17,7 +15,7 @@ def generate_user_token():
     return sha1(b64encode(bytes(randrange(1, 99999)))).hexdigest()
 
 
-def init_db(chown_user):
+def init_db():
     os.system("rm -rf /tmp/misconfiguration && mkdir /tmp/misconfiguration")
     db = "/tmp/misconfiguration/misconfiguration.db"
 
@@ -41,20 +39,12 @@ def init_db(chown_user):
     conn.commit()
     conn.close()
 
-    subprocess.call(["chown", "--", "{}:{}".format(chown_user, chown_user), db])
+    subprocess.call(["chown", "--", "1000:1000", db])
     subprocess.call(["chmod", "--", "640", db])
 
 
-def init_secret(secret):
-    with open('secret', "w") as _file:
-        _file.write(secret)
-
-
 def main():
-    secret = sys.argv[1]
-    user = sys.argv[2]
-    init_db(user)
-    init_secret(secret)
+    init_db()
 
 
 if __name__ == "__main__":
