@@ -1,44 +1,52 @@
 # Add  challenges
 
+You can (*and should*) take inspiration from other existing challenges, see for example `challs/injection_conf.dir`
 
-## Create directory structure  :
+## Create directory structure
 
-Go to the git cloned repo :
+Go to the git cloned repo, and create your new challenge:
 
-    cd ~/ctf_pedagogique/challs
-you can use environment variable to ease directory creation  that must end up with .dir:
+```bash
+    cd ~/pedagogic_ctf/challs
+    mkdir ${chall_name}.dir
+```
 
-    export NEW_CHALL_NAME=php_exec
-    mkdir $NEW_CHALL_NAME.dir
-Now you must create the json file that will describe your challenge,
-"parameters" is used to pass arguments to you script in a ordered way :
+Now let's create the json file that will describe your challenge,
+"parameters" is used to pass arguments to you script in a ordered way:
 
 ```json
 {
   "name": "name of your challenge",
   "points": 100,
-  "description": " your challenge description ",
+  "description": " your challenge description: what the program does",
   "parameters": [
     {
       "name": "name of the input displayed to the user. As this is the first parameter, this will be passed as first argv to your challenge script",
       "placeholder": "simple example display to the user"
+    },
+    {
+      "name": "Email",
+      "placeholder": "ex: me@me.com"
     }
   ],
   "languages": [
     {
-      "name": "name the language (example: PYTHON)",
-      "extension": "extension of the language (example: .py)"
+      "name": "For now only 'GOLANG', 'PERL' or 'PYTHON'",
+      "extension": "For now only '.go', '.pl', or '.py'"
     }
   ],
-  "resolved_conclusion":"your challenge conclusion note."
+  "resolved_conclusion":"your challenge conclusion note, explaining the vulnerability and how to avoid it"
 }
 ```
 
-Create a init.py script that will init challenges dependencies (db, secrets ...).
-Create a check.py script that will return 2 if you challenge is still usable.
-Create a exploit.py script that will return 3 if you challenge is still hackable.
+Then 3 more files are required for the challenge to be fully operational:
 
-Then re-run init.sh.
+- `init.py` that will init challenges dependencies (db, secrets ...). 
+It will be launched **once** when you start the project with `argv[1] = the_secret_the_user_need_to_find`
+- `check.py` which should return 2 if you challenge is still usable. 
+It will be launched along with `exploit.py` each time a user submits a corrected version of a challenge.
+- `exploit.py` which should return 3 if you challenge is still hackable. 
+It will be launched along with `check.py` each time a user submits a corrected version of a challenge.
 
 ## Tests :
 
