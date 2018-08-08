@@ -9,7 +9,7 @@ use Mojo::URL;
 use Mojo::UserAgent;
 
 my $driver = "SQLite";
-my $dsn = "DBI:$driver:dbname=/tmp/sqli.db";
+my $dsn = "DBI:$driver:dbname=/tmp/sqli/sqli.db";
 my $dbh = DBI->connect($dsn, undef, undef, { AutoCommit => 1 }) or exit;
 
 my $app = Mojolicious->new;

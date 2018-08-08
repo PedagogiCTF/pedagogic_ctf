@@ -10,7 +10,7 @@ use Mojo::UserAgent;
 use String::Random qw(random_regex);
 
 my $driver = "SQLite";
-my $dsn = "DBI:$driver:dbname=/tmp/idor.db";
+my $dsn = "DBI:$driver:dbname=/tmp/idor/idor.db";
 my $dbh = DBI->connect($dsn, undef, undef, { AutoCommit => 1 }) or exit;
 
 my $username = "";

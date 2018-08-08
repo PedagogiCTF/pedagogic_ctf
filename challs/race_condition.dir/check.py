@@ -74,8 +74,8 @@ def check(correction_file, secret):
 
 def main():
 
-    correction_file = sys.argv[1]
-    secret = sys.argv[2]
+    secret = sys.argv[1]
+    correction_file = sys.argv[2]
     return_code = 0 if check(correction_file, secret) else 2
     sys.exit(return_code)
 

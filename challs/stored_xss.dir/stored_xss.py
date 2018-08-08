@@ -69,7 +69,7 @@ if __name__ == '__main__':
         sys.exit(0)
 
     # Post comment
-    conn = sqlite3.connect('/tmp/stored_xss.db', isolation_level=None)
+    conn = sqlite3.connect('/tmp/stored_xss/stored_xss.db', isolation_level=None)
     cursor = conn.cursor()
     tester = APP.test_client()
     ctx = APP.test_request_context()
