@@ -73,7 +73,7 @@ if __name__ == '__main__':
         tester = APP.test_client()
         ctx = APP.test_request_context()
         ctx.push()
-        conn = sqlite3.connect('/tmp/sqli.db', isolation_level=None)
+        conn = sqlite3.connect('/tmp/sqli/sqli.db', isolation_level=None)
         cursor = conn.cursor()
         g.cursor = cursor
     except:

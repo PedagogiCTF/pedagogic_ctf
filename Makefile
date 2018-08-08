@@ -44,8 +44,8 @@ launch-db: trusted-network
 		-e POSTGRES_DB=pedagogic_ctf \
 		-v db:/var/lib/postgresql/data \
 		postgres:10.4; \
+	sleep 1; \
 	docker exec db createuser -U postgres ctf || echo "User already exists"; \
-	docker exec db echo $${password} ; \
 	docker exec db psql -U postgres -c "ALTER USER ctf WITH PASSWORD 'md5$$(echo -n $${password}ctf | md5sum | cut -d ' ' -f 1)'"
 	# Create db if not exists
 	docker exec db createdb -U postgres pedagogic_ctf  || echo "DB already exists";

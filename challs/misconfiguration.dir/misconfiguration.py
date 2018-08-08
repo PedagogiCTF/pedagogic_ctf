@@ -100,7 +100,7 @@ if __name__ == '__main__':
         tester = APP.test_client()
         ctx = APP.test_request_context()
         ctx.push()
-        conn = sqlite3.connect('/tmp/misconfiguration.db', isolation_level=None)
+        conn = sqlite3.connect('/tmp/misconfiguration/misconfiguration.db', isolation_level=None)
         cursor = conn.cursor()
         g.cursor = cursor
         g.username = username

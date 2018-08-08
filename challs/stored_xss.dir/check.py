@@ -48,7 +48,7 @@ def check(correction_file):
         print("Unable to validate victim_browser.py output: {}".format(out))
         return False
 
-    con = sqlite3.connect('/tmp/stored_xss.db', isolation_level=None)
+    con = sqlite3.connect('/tmp/stored_xss/stored_xss.db', isolation_level=None)
     dump = b64encode(bytes(
         '\n'.join(line for line in con.iterdump() if '"sqlite_sequence"' not in line),
         "utf-8"
@@ -73,7 +73,7 @@ def check(correction_file):
 
 def main():
 
-    correction_file = sys.argv[1]
+    correction_file = sys.argv[2]
     return_code = 0 if check(correction_file) else 2
     sys.exit(return_code)
 

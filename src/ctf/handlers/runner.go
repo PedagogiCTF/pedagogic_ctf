@@ -339,9 +339,8 @@ func (r *Runner) createContainer(image string, cmd []string) error {
 	hostPath := fmt.Sprintf("/tmp/guest/%s", path.Base(r.CodeDir))
 	binds := []string{fmt.Sprintf("%s:/code", hostPath)}
 	if r.RunnerType == RUNNER_EXPLOITATION {
-		// Mounting /tmp/guest/chall_name/chall_name.db to /tmp/chall_name.db
-		dbPath := path.Join("/tmp/guest", r.ChallengeName)
-		binds = append(binds, fmt.Sprintf("%s/%s.db:/tmp/%s.db", dbPath, r.ChallengeName, r.ChallengeName))
+		// Mounting /tmp/guest/chall_name/chall_name.db to /tmp/chall_name/chall_name.db
+		binds = append(binds, fmt.Sprintf("/tmp/guest/%s/%s.db:/tmp/%s/%s.db", r.ChallengeName, r.ChallengeName, r.ChallengeName, r.ChallengeName))
 	}
 
 	hostConfig := &dcli.HostConfig{

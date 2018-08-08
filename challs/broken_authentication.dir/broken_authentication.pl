@@ -11,7 +11,7 @@ use Mojo::URL;
 use Mojo::UserAgent;
 
 my $driver = "SQLite";
-my $dsn = "DBI:$driver:dbname=/tmp/broken_authentication.db";
+my $dsn = "DBI:$driver:dbname=/tmp/broken_authentication/broken_authentication.db";
 my $dbh = DBI->connect($dsn, undef, undef, { sqlite_see_if_its_a_number => 1, AutoCommit => 1 }) or exit;
 
 my $username = "";

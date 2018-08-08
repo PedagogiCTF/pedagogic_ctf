@@ -30,7 +30,7 @@ def victim_browse(user_email, secret):
     """
         Fake a browser navigation
     """
-    con = sqlite3.connect('/tmp/stored_xss.db', isolation_level=None)
+    con = sqlite3.connect('/tmp/stored_xss/stored_xss.db', isolation_level=None)
     dump = b64encode(bytes(
         '\n'.join(line for line in con.iterdump() if '"sqlite_sequence"' not in line),
         "utf-8"

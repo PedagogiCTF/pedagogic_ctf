@@ -13,7 +13,7 @@ use Mojo::URL;
 use Mojo::UserAgent;
 
 my $driver = "SQLite";
-my $dsn = "DBI:$driver:dbname=/tmp/stored_xss.db";
+my $dsn = "DBI:$driver:dbname=/tmp/stored_xss/stored_xss.db";
 my $dbh = DBI->connect($dsn, undef, undef, { sqlite_see_if_its_a_number => 1, AutoCommit => 1 }) or exit;
 
 my $email = "";

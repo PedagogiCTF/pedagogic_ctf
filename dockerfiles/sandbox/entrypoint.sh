@@ -11,7 +11,6 @@ if [ -z $1 ]; then
 fi
 
 echo "127.0.0.1 $(hostname)" >> /etc/hosts
-tc qdisc add dev eth0 root tbf rate 10kbps latency 50ms burst 2500
 
 chgrp code /code
 chmod 0775 /code
