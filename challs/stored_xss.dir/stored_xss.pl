@@ -31,21 +31,10 @@ $app->routes->post('/comments' => sub {
     $sth->bind_param(1, $email);
     $sth->bind_param(2, $comment);
     $sth->execute;
-    
-    return $c->render(
-        status => 200,
-        text => "Your comment has been inserted"
-    );
-});
 
-$app->routes->get('/comments' => sub {
-    #
-    #    Return secret page
-    #
-    my $c = shift;
-    my $sth = $dbh->prepare("SELECT author, comment from comments");
+    $sth = $dbh->prepare("SELECT author, comment from comments");
     $sth->execute();
-        
+
     my $response = "<table><tr><th>Author</th><th>comment</th></tr>";
 
     while(my @row = $sth->fetchrow_array()) {
@@ -54,7 +43,7 @@ $app->routes->get('/comments' => sub {
 
     $response = $response . "</table>";
     return $c->render(
-        status => 200, 
+        status => 200,
         text => $response
     );
 });
@@ -62,21 +51,27 @@ $app->routes->get('/comments' => sub {
 ####################     Main   #############################
 
 sub main {
-
     $email = $ARGV[0];
     my $comment = $ARGV[1];
-
     if (!$comment) {
         print "Missing comment";
         exit 0;
     }
 
+    # 1st step:
+    # Post comment
     my $url = Mojo::URL->new("/comments");
     my $ua = Mojo::UserAgent->new();
     $ua->server->app($app);
-    $ua->post($url => form => {comment => $comment});
-    my $output = `python3 victim_browser.py $email`;
-    print $output;
+    my $tx = $ua->post($url => form => {comment => $comment});
+    my $html = $tx->result->body;
+
+    # 2nd step:
+    # The victim goes see the webpage containing the comments
+    open(my $fh, "-|", "python3", "victim_browser.py", $email, $html);
+    while ( my $line = <$fh> ) {
+        print $line;
+    }
 }
 
 main();
