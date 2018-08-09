@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-
+import base64
 import random
 import sqlite3
 import subprocess
@@ -48,21 +48,12 @@ def check(correction_file):
         print("Unable to validate victim_browser.py output: {}".format(out))
         return False
 
-    con = sqlite3.connect('/tmp/stored_xss/stored_xss.db', isolation_level=None)
-    dump = b64encode(bytes(
-        '\n'.join(line for line in con.iterdump() if '"sqlite_sequence"' not in line),
-        "utf-8"
-    )).decode()
-    con.close()
-
-    path = "http://{}:{}/internal/debug/get-comments?client={}&db_dump={}".format(
-        SELENIUM_HOST,
-        PORT,
-        user,
-        quote(dump)
-    )
-
-    response = requests.get(path).text
+    try:
+        response = out.split("For debugging purposes: ")[-1].split(" ")[0]
+        response = base64.b64decode(response.encode()).decode()
+    except Exception:
+        print("The expected HTML was not found in response")
+        return False
 
     if '<tr><td>{}</td><td>test</td></tr>'.format(user) not in response:
         print("POST comments seems broken, unable to find test comment in {}".format(response))
@@ -72,8 +63,8 @@ def check(correction_file):
 
 
 def main():
-
     correction_file = sys.argv[2]
+
     return_code = 0 if check(correction_file) else 2
     sys.exit(return_code)
 
