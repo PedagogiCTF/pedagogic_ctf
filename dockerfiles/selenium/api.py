@@ -61,33 +61,9 @@ def create_app():
 
     @app.route('/internal/debug/get-comments')
     def get_comments():
+        html = request.args.get('html')
 
-        # To filter only comments for current user (because the db is shared)
-        author = request.args['client']
-
-        dump = request.args.get('db_dump')
-
-        conn = sqlite3.connect(":memory:")
-        cursor = conn.cursor()
-        cursor.executescript(b64decode(dump).decode())
-
-        comments = cursor.execute(
-            "SELECT author, comment from comments WHERE author IN (?, ?)",
-            ('admin', author)
-        )
-        comments = cursor.fetchall()
-        conn.close()
-
-        rows = ''
-        response = "{}<table><tr><th>Author</th><th>comment</th></tr>{}"
-        for entry in comments:
-            rows += '<tr><td>{}</td><td>{}</td></tr>'.format(
-                entry[0],
-                entry[1],
-            )
-
-        response = response.format(CSS, rows)
-        response = response + "</table>"
+        response = CSS + html
         return response
 
     @app.route('/internal/debug/get-logs')
@@ -98,7 +74,7 @@ def create_app():
         with open('/tmp/api.log', 'r') as log:
             srv_logs = log.readlines()
 
-        srv_logs = '<br>'.join([l.strip() for l in srv_logs if author in l or '* Running' in l])
+        srv_logs = '<br>'.join([l.strip().replace(author + "&html", "") for l in srv_logs if author in l or '* Running' in l])
         srv_logs = srv_logs.replace('http://{}'.format(HOST), 'http://evil.com')
 
         return srv_logs

@@ -1,12 +1,8 @@
 #!/usr/bin/python3
-
-import sqlite3
+import base64
 import sys
-
-from base64 import b64encode
 from time import sleep
 from urllib.parse import quote
-
 import requests
 
 from redis import Redis
@@ -26,17 +22,10 @@ selenium_queue = Queue(
 )
 
 
-def victim_browse(user_email, secret):
+def victim_browse(user_email, html, secret):
     """
         Fake a browser navigation
     """
-    con = sqlite3.connect('/tmp/stored_xss/stored_xss.db', isolation_level=None)
-    dump = b64encode(bytes(
-        '\n'.join(line for line in con.iterdump() if '"sqlite_sequence"' not in line),
-        "utf-8"
-    )).decode()
-    con.close()
-
     job = selenium_queue.enqueue(
         'worker.get_screenshot',
         host=HOST,
@@ -44,7 +33,7 @@ def victim_browse(user_email, secret):
         path=DB_REQUEST_PATH,
         client=user_email,
         secret=secret,
-        db_dump=quote(dump)
+        html=quote(html)
     )
 
     while job.status != 'finished':
@@ -54,13 +43,13 @@ def victim_browse(user_email, secret):
 
 
 def main():
-
     ctf_user_email = sys.argv[1]
+    html = sys.argv[2]
 
     with open('secret') as _file:
         secret = _file.read().strip()
 
-    victim_response = victim_browse(ctf_user_email, secret)
+    victim_response = victim_browse(ctf_user_email, html, secret)
 
     logs = requests.get('http://{}:{}/internal/debug/get-logs?client={}'.format(
         SELENIUM_HOST,
@@ -68,10 +57,11 @@ def main():
         ctf_user_email
     )).text
 
-    response = "<h2>Victim browser's screenshot</h2><br>{}<h2>Server logs</h2><pre>{}</pre>"
-    response = response.format(victim_response, logs)
+    debug_html = " <!-- For debugging purposes: {} -->".format(base64.b64encode(html.encode()).decode())
+    response = "<h2>Victim browser's screenshot</h2><br>{}<h2>Server logs</h2><pre>{}</pre>{}"
+    response = response.format(victim_response, logs, debug_html)
     print(response)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     main()

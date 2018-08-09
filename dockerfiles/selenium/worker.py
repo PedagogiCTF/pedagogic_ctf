@@ -7,7 +7,7 @@ from rq import Connection, Queue, Worker
 from browser import Browser
 
 
-def get_screenshot(host=None, port=None, path=None, client=None, secret=None, db_dump=None):
+def get_screenshot(host=None, port=None, path=None, client=None, secret=None, html=None):
     """
         Take a screenshot for given path
     """
@@ -20,7 +20,7 @@ def get_screenshot(host=None, port=None, path=None, client=None, secret=None, db
         'path': '/'
     })
 
-    Browser.get('http://{}:{}{}?client={}&db_dump={}'.format(host, port, path, client, db_dump))
+    Browser.get('http://{}:{}{}?client={}&html={}'.format(host, port, path, client, html))
     img = Browser.get_screenshot_as_base64()
 
     return '<img alt="Embedded Image" src="data:image/png;base64,{}"/>'.format(img)
