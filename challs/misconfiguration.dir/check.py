@@ -5,7 +5,6 @@ import sys
 
 
 def run_cmd(correction_file, args):
-
     args.insert(0, correction_file)
 
     if correction_file.endswith('.py'):
@@ -81,7 +80,6 @@ def check(correction_file, secret):
 
 
 def main():
-
     secret = sys.argv[1]
     correction_file = sys.argv[2]
     return_code = 0 if check(correction_file, secret) else 2
