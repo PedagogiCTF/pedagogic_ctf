@@ -26,19 +26,19 @@ my $dsn = "DBI:$driver:dbname=/tmp/race_condition/race_condition.db";
 my $dbh = DBI->connect($dsn, undef, undef, { sqlite_see_if_its_a_number => 1, AutoCommit => 1 }) or exit;
 
 
-sub getUserId{
-	my $sth = $dbh->prepare("SELECT id, password FROM users WHERE login=?");
+sub getUserInfo{
+	my $sth = $dbh->prepare("SELECT id, password, authorized FROM users WHERE login=?");
 	$sth->bind_param(1, $login);
 	$sth->execute;
-	$sth->bind_columns(\my($id, $hashedPass));
+	$sth->bind_columns(\my($id, $hashedPass, $authorized));
 	my $user = $sth->fetchrow_array;
 	if($user){
 		my $passphrase = Authen::Passphrase::BlowfishCrypt->from_crypt($hashedPass);
 		if($passphrase->match($passwd)) {
-			return $id;
+			return ($id, $authorized);
 		}
 	}
-	return -1;
+	return (-1, false);
 }
 
 
@@ -51,23 +51,18 @@ sub doRegister{
 	select(undef, undef, undef, 0.5); # simulate more db access / calculus
 	my $elapsed = time - $startTime;
 	print("It's been " . $elapsed . "s since you started register.\n");
-	$sth = $dbh->prepare("INSERT INTO forbidden_ids(user_id) VALUES(?)");
-	$sth->execute(getUserId()) or exit;
+	my ($userId, $authorized) = getUserInfo();
+	$sth = $dbh->prepare("UPDATE users SET authorized=false WHERE id=?");
+	$sth->execute($userId) or exit;
 }
 
 
 sub doLogin{
-	my $userId = getUserId();
+	my ($userId, $authorized) = getUserInfo();
 	if ($userId < 0){
 		return "We failed to log you in :/\n";
 	}
-	my $sth = $dbh->prepare("SELECT count(*) FROM forbidden_ids WHERE user_id=?");
-	my $elapsed = time - $startTime;
-	print("It's been " . $elapsed ."s since you started log in.\n");
-	$sth->execute($userId) or exit;
-	$sth->bind_columns(\my($count));
-	$sth->fetchrow_array;
-	if($count > 0){
+	if (!$authorized){
 		return "You are logged in. But sorry you are not allowed to see the secret.\n";
 	}
 	open my $fh, '<', 'secret' or die "error opening secret file";

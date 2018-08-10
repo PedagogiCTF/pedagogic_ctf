@@ -14,14 +14,13 @@ def init_db(secret):
     conn = sqlite3.connect(db)
     cur = conn.cursor()
     cur.execute("DROP TABLE IF EXISTS users")
-    cur.execute("DROP TABLE IF EXISTS forbidden_ids")
     conn.commit()
     cur.execute("""CREATE TABLE users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         login TEXT NOT NULL UNIQUE,
+        authorized INTEGER DEFAULT 1,
         password TEXT NOT NULL)""")
 
-    cur.execute("""CREATE TABLE forbidden_ids (user_id INTEGER NOT NULL UNIQUE)""")
     conn.commit()
 
     hashed_secret = bcrypt.hashpw(secret.encode("utf-8"), bcrypt.gensalt(8)).decode('utf-8')
