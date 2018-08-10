@@ -1,22 +1,16 @@
 #!/usr/bin/python3
 import base64
 import random
-import sqlite3
 import subprocess
 import sys
 
-from base64 import b64encode
 from string import ascii_letters, digits
-from urllib.parse import quote
-
-import requests
 
 SELENIUM_HOST = "selenium.pedagogic_ctf"
 PORT = 8888
 
 
 def run_cmd(correction_file, args):
-
     args.insert(0, correction_file)
 
     if correction_file.endswith('.py'):

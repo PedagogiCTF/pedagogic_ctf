@@ -6,7 +6,6 @@ import sys
 
 
 def run_cmd(correction_file, args):
-
     args.insert(0, correction_file)
 
     if correction_file.endswith('.py'):
@@ -65,9 +64,11 @@ def check(correction_file, secret):
             return False
 
     out, return_code = run_cmd(correction_file, ['test123', '', '/accounts/new'])
-    for reg in (r'Your account .* has been successfully created', r'You can view account details here /accounts/.*/details'):
+    for reg in (r'Your account .* has been successfully created',
+                r'You can view account details here /accounts/.*/details'):
         if not re.search(reg, out, re.I):
-            print('Account creation seems broken. Please do not change API output... Your code output \n\n{}'.format(out))
+            print('Account creation seems broken. Please do not change API output... '
+                  'Your code output \n\n{}'.format(out))
             return False
 
     out, return_code = run_cmd(correction_file, ['test123', '', '/accounts/new'])
@@ -89,14 +90,14 @@ def check(correction_file, secret):
     out, return_code = run_cmd(correction_file, ['test123', token, '/accounts/{}/details'.format(account_id)])
     for detail in ('account', 'balance', 'description'):
         if detail not in out.lower():
-            print('Unable to parse account details. Please do not change API output... Your code output \n\n{}'.format(out))
+            print('Unable to parse account details. Please do not change API output... '
+                  'Your code output \n\n{}'.format(out))
             return False
 
     return True
 
 
 def main():
-
     secret = sys.argv[1]
     correction_file = sys.argv[2]
     return_code = 0 if check(correction_file, secret) else 2

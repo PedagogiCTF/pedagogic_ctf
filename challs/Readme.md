@@ -41,12 +41,19 @@ Now let's create the json file that will describe your challenge,
 
 Then 3 more files are required for the challenge to be fully operational:
 
-- `init.py` that will init challenges dependencies (db, secrets ...). 
-It will be launched **once** when you start the project with `argv[1] = the_secret_the_user_need_to_find`
-- `check.py` which should return 2 if you challenge is still usable. 
-It will be launched along with `exploit.py` each time a user submits a corrected version of a challenge.
-- `exploit.py` which should return 3 if you challenge is still hackable. 
-It will be launched along with `check.py` each time a user submits a corrected version of a challenge.
+- `init.py` that will init challenges dependencies (db, secrets ...).
+It will be launched **once** when you start the project with `argv[1] = the_secret_the_user_need_to_find`.
+It will also be launched each time a user submits a correction proposal.
+- `check.py` which should return 2 if you challenge is still usable.
+It will be launched along with `exploit.py` each time a user submits a correction proposal of the challenge.
+The arguments are: 
+    * `argv[1] = the_secret`
+    * `argv[2] = /path/to/the/user/script`
+- `exploit.py` which should return 3 if you challenge is still hackable.
+It will be launched along with `check.py` each time a user submits a correction proposal of the challenge.
+The arguments are: 
+    * `argv[1] = the_secret`
+    * `argv[2] = /path/to/the/user/script`
 
 ## Tests :
 
