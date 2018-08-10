@@ -33,39 +33,36 @@ def random_string(size):
 
 
 def check(correction_file, secret):
-
     out, return_code = run_cmd(correction_file, ["login", secret, secret])
     if "You are logged in. And congratz ! Here is the secret : " + secret + "\n" not in out:
-        print(
-            "Output is wrong when the admin tries to log in. The output of your code is : "
-            + out
-            + "\nAnd it should contain : \"You are logged in. And congratz ! Here is the secret : " + secret + "\"")
+        print("Output is wrong when the admin tries to log in. The output of your code is : "
+              + out
+              + "\nAnd it should contain : \"You are logged in. And congratz ! Here is the secret : " + secret + "\"")
         return False
     user = random_string(20)
     password = random_string(20)
     out_reg, return_code_reg = run_cmd(correction_file, ["register", user, password])
     if "You are registered !\n" not in out_reg:
-        print(
-            "Output is wrong when a regular user tries to register. The output of your code is : "
-            + out
-            + "\nAnd it should contain : \"You are registered !\"")
+        print("Output is wrong when a regular user tries to register. The output of your code is : "
+              + out_reg
+              + "\nAnd it should contain : \"You are registered !\"")
         return False
     out_log, return_code_log = run_cmd(correction_file, ["login", user, password])
     if "You are logged in. But sorry you are not allowed to see the secret.\n" not in out_log:
-        print(
-            "Output is wrong when a regular user tries to log in. The output of your code is : " + out + "\nAnd it should contain : \"You are logged in. But sorry you are not allowed to see the secret.\"")
+        print("Output is wrong when a regular user tries to log in. The output of your code is : " + out_log +
+              "\nAnd it should contain : \"You are logged in. But sorry you are not allowed to see the secret.\"")
         return False
 
     out_fake_log, return_code_fake_log = run_cmd(correction_file, ["login", "reallyrandom", "reallyrandom"])
     if "We failed to log you in :/\n" != out_fake_log:
-        print(
-            "Output is wrong when a user fail to log in. The output of your code is : " + out + "\nAnd it should contain : \"We failed to log you in :/\"")
+        print("Output is wrong when a user fail to log in. The output of your code is : " + out_fake_log +
+              "\nAnd it should contain : \"We failed to log you in :/\"")
         return False
 
     out, ret = run_cmd(correction_file, [])
     if "Please send me an 'action' (register or login) with your credentials (login, then password)\n" not in out:
-        print(
-            "Output of `./youcode_compiled` should be :\n\"Please send me an 'action' (register or login) with your credentials (login, then password)\"\n\nBut the output is :\n\"" + out + "\"")
+        print("Output of `./youcode_compiled` should be :\n\"Please send me an 'action' (register or login) with "
+              "your credentials (login, then password)\"\n\nBut the output is :\n\"" + out + "\"")
         return False
 
     return True
