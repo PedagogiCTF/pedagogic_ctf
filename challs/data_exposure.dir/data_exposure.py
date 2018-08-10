@@ -23,19 +23,19 @@ def create_app():
         # following SOC advisory:
         with open('key') as key:
             # 1) Removed plain AES key used to cipher secret from code
-            secretKey = key.read()
+            secret_key = key.read()
             # 2) use an IV that change at every request
-            iv = b64encode(bytes(str(int(time())), "utf-8"))
+            iv = b64encode(str(int(time())).encode())
             # 3) Use military grade encryption cipher
-            obj = AES.new(secretKey, AES.MODE_CBC, iv)
+            obj = AES.new(secret_key, AES.MODE_CBC, iv)
             try:
                 ciphertext = obj.encrypt(g.plain)
             except:
                 # hum... anyway, crypto should not rely on obscurity!
-                return "Encryption problem!\nIs your message 16 bytes long?\nDumping usefull info:\n {}".format(
-                    secretKey)
+                return "Encryption problem!\nIs your message 16 bytes long?\nDumping useful info:\n {}".format(
+                    secret_key)
             return "Here is the encrypted text to be pass to your other app: {}.{}".format(
-                iv.decode('ascii'), b64encode(ciphertext).decode('ascii')
+                iv.decode(), b64encode(ciphertext).decode()
             )
 
     return app
@@ -47,7 +47,6 @@ APP.config['TESTING'] = True
 
 
 if __name__ == '__main__':
-
     # Init app and db cursor
     try:
         tester = APP.test_client()

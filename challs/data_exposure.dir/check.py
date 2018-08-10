@@ -30,17 +30,21 @@ def check(correction_file, secret):
         {
             'params': ['odtokjupfpenmtyo'],
             'response': 'here is the encrypted text',
-            'message': 'Encryption API is broken. Expecting : here is the encrypted text\n\n Your code output: \n\n{}',
+            'message': 'Encryption API is broken. Expecting to find: "here is the encrypted text" in the response\n\n'
+                       'Your code output: \n\n{}',
         },
         {
             'params': [''],
             'response': 'here is the encrypted text',
-            'message': 'Encryption API is broken. Without user input, return exemple found in secret.\n Expecting : here is the encrypted text\n\n Your code output: \n\n{}',
+            'message': 'Encryption API is broken. Without user input, return example found in secret.\n '
+                       'Expecting to find: "here is the encrypted text" in the response\n\n'
+                       'Your code output: \n\n{}',
         },
         {
             'params': ['tooshort'],
             'response': 'encryption problem!',
-            'message': 'Encryption API is broken. Expecting : Encryption problem!\n\n Your code output: \n\n{}',
+            'message': 'Encryption API is broken. Expecting : "Encryption problem!"\n\n'
+                       'Your code output: \n\n{}',
         },
     ]
 
