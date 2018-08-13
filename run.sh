@@ -12,7 +12,7 @@ if docker ps -a | grep selenium >/dev/null ; then
 fi
 
 echo " [*] Starting Selenium Docker"
-docker run --name=selenium --network=pedagogic_ctf -d --restart=unless-stopped -t selenium
+docker run --name=selenium --network=pedagogic_ctf -d --restart=unless-stopped -t pedagogictf/selenium
 
 echo " [*] Generating challenges secrets"
 for chall_name in `ls challs|grep dir|sed "s/.dir$//"`

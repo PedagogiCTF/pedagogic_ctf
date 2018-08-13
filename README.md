@@ -13,11 +13,20 @@ Please feel free to contribute ! See in the */challs* directory for instructions
 ### Installation
 
 You will need to install these software:
+- docker
+- sudo
+- git
+
+If you want to build the project yourself, you will also need:
 - python3
 - nodejs + bower
 - golang
-- docker
-- sudo
+
+Launch this command:
+```bash
+git clone https://github.com/PedagogiCTF/pedagogic_ctf
+cd pedagogic_ctf
+```
 
 This project was tested on debian stretch but should work on any Linux distribution.
 
@@ -31,7 +40,9 @@ bash ssl.sh # Please follow the instructions
 Once you've added the ssl certificates, you can build and launch the app:
 
 ```bash
-make api-run
+# This will fetch the docker images from https://hub.docker.com/r/pedagogictf/
+# Then it will launch them
+make run-prod
 ```
 
 

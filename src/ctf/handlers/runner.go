@@ -49,7 +49,7 @@ func RunSnippet(code, language string) (output string, err error) {
 	runner.RunnerType = RUNNER_SNIPPET
 
 	var status int
-	status, err = runner.Run("sandbox", []string{}, 3000)
+	status, err = runner.Run("pedagogictf/sandbox", []string{}, 3000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return
@@ -90,7 +90,7 @@ func RunExploitation(challengeName, language, challengeFolderPath string, args [
 	runner.ChallengeName = challengeName
 
 	var status int
-	status, err = runner.Run("exploitation", args, 10000)
+	status, err = runner.Run("pedagogictf/exploitation", args, 10000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return
@@ -127,7 +127,7 @@ func RunCorrection(challengeFolderPath, code, language string) (output string, s
 	runner.RunnerType = RUNNER_CORRECTION
 	runner.ChallengeFolderPath = challengeFolderPath
 
-	status, err = runner.Run("correction", []string{"code"}, 7000)
+	status, err = runner.Run("pedagogictf/correction", []string{"code"}, 7000)
 	if err != nil {
 		log.Printf("[E] Error running code: %s\n", err)
 		return

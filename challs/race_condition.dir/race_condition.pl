@@ -32,13 +32,13 @@ sub getUserInfo{
 	$sth->execute;
 	$sth->bind_columns(\my($id, $hashedPass, $authorized));
 	my $user = $sth->fetchrow_array;
-	if($user){
+	if(defined $user){
 		my $passphrase = Authen::Passphrase::BlowfishCrypt->from_crypt($hashedPass);
 		if($passphrase->match($passwd)) {
 			return ($id, $authorized == 1);
 		}
 	}
-	return (-1, false);
+	return (-1, 0);
 }
 
 

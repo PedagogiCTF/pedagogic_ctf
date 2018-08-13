@@ -41,8 +41,8 @@ def create_app():
                "</table>"
         for entry in comments:
             rows += "<tr>" \
-                    "  <td>{}</td>" \
-                    "  <td>{}</td>" \
+                    "<td>{}</td>" \
+                    "<td>{}</td>" \
                     "</tr>".format(
                       entry[0],
                       entry[1],

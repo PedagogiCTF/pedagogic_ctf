@@ -16,18 +16,20 @@ docker-util-images:
 		echo " [*] Entering $$dir" ; \
 		cd $$dir ; \
 		image=$$(echo $$dir | sed "s/.*\///") ; \
-		echo " [*] Building $$image Docker image" ; \
-		docker build . -t $$image ; \
+		echo " [*] Building pedagogictf/$$image Docker image" ; \
+		docker build . -t pedagogictf/$$image ; \
 		echo ; \
 		cd - ; \
 	done
 
 api: challenges.json go docker-util-images
-	docker build -t pedagogictf-api -f Dockerfile.api .
+	docker build -t pedagogictf/api -f Dockerfile.api .
 
-frontend: node
-	docker volume ls | grep frontend-ssl || (docker volume create frontend-ssl && echo -e "\n\e[41mAdd your ssl certificates to the docker volume! See ssl.sh\e[49m\n")
-	docker build -t pedagogictf-frontend -f Dockerfile.front .
+frontend-ssl:
+	docker volume ls | grep frontend-ssl || (docker volume create frontend-ssl && echo -e "\n\e[41mAdd your ssl certificates to the docker volume! See ssl.sh\e[49m\n" && exit 2)
+
+frontend: frontend-ssl node
+	docker build -t pedagogictf/frontend -f Dockerfile.front .
 
 trusted-network:
 	docker network ls | grep trusted || docker network create trusted
@@ -52,7 +54,26 @@ launch-db: trusted-network
 	# Grant access to user to the DB
 	docker exec db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE pedagogic_ctf TO ctf"
 
-api-run: frontend api trusted-network launch-db
+docker-push:
+	docker login --username pedagogictf docker.io
+	for dir in dockerfiles/* ; do \
+		image=$$(echo $$dir | sed "s/.*\///") ; \
+		docker push pedagogictf/$$image ; \
+		echo ; \
+	done
+	docker push pedagogictf/api
+	docker push pedagogictf/frontend
+
+docker-pull:
+	for dir in dockerfiles/* ; do \
+		image=$$(echo $$dir | sed "s/.*\///") ; \
+		docker pull pedagogictf/$$image ; \
+		echo ; \
+	done
+	docker pull pedagogictf/api
+	docker pull pedagogictf/frontend
+
+launch:
 	sudo rm -rf /tmp/guest && mkdir /tmp/guest && chmod -R 750 /tmp/guest
 	docker run -d --restart=unless-stopped \
 		--network=trusted \
@@ -60,14 +81,17 @@ api-run: frontend api trusted-network launch-db
 		--env-file $(ENV_FILE) \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v /tmp/guest:/tmp \
-		pedagogictf-api
+		pedagogictf/api
 	docker run -d --restart=unless-stopped \
 		--network=trusted \
 		--name=front \
 		-p 80:80 \
 		-p 443:443 \
 		-v frontend-ssl:/etc/nginx/ssl/ \
-		pedagogictf-frontend
+		pedagogictf/frontend
 
-clean:
-	rm main
+run-dev: frontend api trusted-network launch-db launch
+	echo "API launched with images built from local sources"
+
+run-prod: frontend-ssl trusted-network launch-db launch docker-pull
+	echo "API launched from remote docker images"
