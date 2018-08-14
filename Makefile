@@ -46,7 +46,9 @@ launch-db: trusted-network
 		-e POSTGRES_DB=pedagogic_ctf \
 		-v db:/var/lib/postgresql/data \
 		postgres:10.4; \
-	sleep 1; \
+	echo "DB is launching." && sleep 2; \
+	echo "DB is launching.." && sleep 2; \
+	echo "DB is launching..." && sleep 2; \
 	docker exec db createuser -U postgres ctf || echo "User already exists"; \
 	docker exec db psql -U postgres -c "ALTER USER ctf WITH PASSWORD 'md5$$(echo -n $${password}ctf | md5sum | cut -d ' ' -f 1)'"
 	# Create db if not exists
@@ -93,5 +95,5 @@ launch:
 run-dev: frontend api trusted-network launch-db launch
 	echo "API launched with images built from local sources"
 
-run-prod: frontend-ssl trusted-network launch-db launch docker-pull
+run-prod: docker-pull frontend-ssl trusted-network launch-db launch
 	echo "API launched from remote docker images"

@@ -352,7 +352,7 @@ func (r *Runner) createContainer(image string, cmd []string) error {
 
 	config := &dcli.Config{
 		CPUShares: 2,
-		Memory:    100e6,
+		Memory:    2<<28, // 512Mo = 2^9 * 2^20 = 2<<28
 		Tty:       false,
 		OpenStdin: false,
 		Cmd:       cmd,

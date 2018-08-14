@@ -16,6 +16,7 @@ You will need to install these software:
 - docker
 - sudo
 - git
+- make
 
 If you want to build the project yourself, you will also need:
 - python3
