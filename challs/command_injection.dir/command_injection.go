@@ -20,7 +20,7 @@ func main() {
 		os.Exit(0)
 	}
 	server := args[0]
-	regexServerCompiled := regexp.MustCompile("[!;&'\"`${}><]")
+	regexServerCompiled := regexp.MustCompile("[!;&|'\"`${}><]")
 	if regexServerCompiled.MatchString(server) {
 		fmt.Println("Error, server param not valid.")
 		os.Exit(0)
