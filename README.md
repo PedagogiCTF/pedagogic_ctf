@@ -33,6 +33,11 @@ This project was tested on debian stretch but should work on any Linux distribut
 
 ### Running !
 
+Please make sure that the ports **80** and **443** are available on your local machine 
+(shutdown *apache*, *nginx* and so on..).
+
+Then create the ssl volume using these commands:
+
 ```bash
 docker volume create frontend-ssl
 bash ssl.sh # Please follow the instructions
@@ -45,6 +50,13 @@ Once you've added the ssl certificates, you can build and launch the app:
 # Then it will launch them
 make run-prod
 ```
+
+The pulling of docker images can be a bit long depending on your network, go drink a coffee :)
+
+As soon as the previous command ends you can access the service at `http://localhost`. 
+Note that if you used the method in `ssl.sh` to generate the certificate, the certificate will 
+be auto-signed, which means that you will have a warning in your browser. 
+Use something like https://letsencrypt.org to have a real certificate signed by a valid CA.
 
 
 ## How does it work?

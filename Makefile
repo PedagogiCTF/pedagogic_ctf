@@ -12,13 +12,10 @@ go:
 	GOPATH=$(GOPATH) go build src/ctf/main/main.go
 
 docker-util-images:
-	for dir in dockerfiles/* ; do \
-		echo " [*] Entering $$dir" ; \
-		cd $$dir ; \
-		image=$$(echo $$dir | sed "s/.*\///") ; \
-		echo " [*] Building pedagogictf/$$image Docker image" ; \
+	for image in correction exploitation sandbox selenium ; do \
+		cd dockerfiles/$$image ; \
 		docker build . -t pedagogictf/$$image ; \
-		echo ; \
+		@echo ; \
 		cd - ; \
 	done
 
@@ -57,23 +54,20 @@ launch-db: trusted-network
 	docker exec db psql -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE pedagogic_ctf TO ctf"
 
 docker-push:
-	docker login --username pedagogictf docker.io
-	for dir in dockerfiles/* ; do \
-		image=$$(echo $$dir | sed "s/.*\///") ; \
-		docker push pedagogictf/$$image ; \
-		echo ; \
-	done
 	docker push pedagogictf/api
 	docker push pedagogictf/frontend
+	docker push pedagogictf/selenium
+	docker push pedagogictf/sandbox
+	docker push pedagogictf/exploitation
+	docker push pedagogictf/correction
 
 docker-pull:
-	for dir in dockerfiles/* ; do \
-		image=$$(echo $$dir | sed "s/.*\///") ; \
-		docker pull pedagogictf/$$image ; \
-		echo ; \
-	done
 	docker pull pedagogictf/api
 	docker pull pedagogictf/frontend
+	docker pull pedagogictf/selenium
+	docker pull pedagogictf/sandbox
+	docker pull pedagogictf/exploitation
+	docker pull pedagogictf/correction
 
 launch:
 	sudo rm -rf /tmp/guest && mkdir /tmp/guest && chmod -R 750 /tmp/guest
