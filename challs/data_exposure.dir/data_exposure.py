@@ -52,7 +52,7 @@ if __name__ == '__main__':
         tester = APP.test_client()
         ctx = APP.test_request_context()
         ctx.push()
-        if len(sys.argv) > 1:
+        if len(sys.argv) > 1 and len(sys.argv[1]) > 0:
             g.plain = sys.argv[1]
         else:
             with open('secret') as secret:
